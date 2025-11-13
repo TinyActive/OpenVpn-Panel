@@ -4,8 +4,8 @@ const nextConfig = {
     images: {
         unoptimized: true
     },
-    basePath: process.env.NODE_ENV === 'production' ? '/OpenVpn-Panel' : '',
-    assetPrefix: process.env.NODE_ENV === 'production' ? '/OpenVpn-Panel/' : '',
+    // basePath and assetPrefix removed for custom domain deployment
+    // Only use basePath if deploying to username.github.io/repo-name
 }
 
 module.exports = nextConfig
