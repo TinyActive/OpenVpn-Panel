@@ -16,7 +16,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 router = APIRouter(tags=["Login"])
 
 # API Key security scheme for Swagger UI
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+api_key_header = APIKeyHeader(name="key", auto_error=False)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -88,11 +88,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
 def verify_api_key(api_key: Optional[str] = Depends(api_key_header)) -> dict:
     """
-    Verify API key from X-API-Key header.
+    Verify API key from key header.
     This is for external integrations that need to access the API.
     
     Usage:
-        Add header: X-API-Key: your-api-key-here
+        Add header: key: your-api-key-here
     
     Returns:
         dict with authentication info if valid
@@ -109,7 +109,7 @@ def verify_api_key(api_key: Optional[str] = Depends(api_key_header)) -> dict:
     if not api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing X-API-Key header",
+            detail="Missing key header",
             headers={"WWW-Authenticate": "ApiKey"},
         )
     
@@ -169,7 +169,7 @@ def verify_jwt_or_api_key(
     # Neither authentication method worked
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials. Provide either valid JWT Bearer token or X-API-Key header",
+        detail="Could not validate credentials. Provide either valid JWT Bearer token or key header",
         headers={"WWW-Authenticate": "Bearer, ApiKey"},
     )
 
