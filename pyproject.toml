@@ -1,0 +1,33 @@
+[project]
+name = "ov-panel"
+version = "1.0.7"
+description = "An OpenVPN client management panel on the server"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "requests",
+    "pydantic_settings",
+    "alembic==1.15.1",
+    "SQLAlchemy",
+    "python-dotenv==1.1.0",
+    "pexpect",
+    "psutil",
+    "passlib",
+    "pyjwt",
+    "bcrypt==4.0.1",
+    "python-jose[cryptography]",
+    "python-multipart",
+    "apscheduler",
+    "colorama",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*"]
+exclude = ["data*", "frontend*", "docs*"]
