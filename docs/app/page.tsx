@@ -380,7 +380,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Footer */
+            {/* Footer */}
             <footer className="relative border-t py-12 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-background to-muted/50 -z-10" />
                 <div className="container">
