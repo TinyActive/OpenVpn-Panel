@@ -17,6 +17,8 @@ eggs/
 lib/
 lib64/
 parts/
+# Exception for docs/lib folder (Next.js utility files)
+!docs/lib/
 sdist/
 var/
 wheels/
