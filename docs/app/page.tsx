@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Server, Download, Shield, Activity, Settings, Github, BookOpen, Zap } from "lucide-react";
+import { Users, Server, Download, Shield, Activity, Settings, Github, BookOpen, Zap, Cloud } from "lucide-react";
 import Image from "next/image";
 
 export default function Home() {
@@ -349,11 +349,38 @@ export default function Home() {
                                 </Link>
                             </div>
                         </div>
+
+                        {/* Advanced Configuration */}
+                        <div>
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                <Cloud className="h-5 w-5 text-primary" />
+                                Cấu hình nâng cao
+                            </h3>
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <Link href="/r2-storage" className="group">
+                                    <Card className="h-full border-2 hover:border-primary transition-all hover:shadow-lg">
+                                        <CardHeader>
+                                            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center mb-4">
+                                                <Cloud className="h-6 w-6 text-white" />
+                                            </div>
+                                            <CardTitle className="group-hover:text-primary transition-colors">
+                                                R2 Storage
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <CardDescription>
+                                                Tích hợp Cloudflare R2 để lưu trữ file cấu hình
+                                            </CardDescription>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* Footer */}
+            {/* Footer */
             <footer className="relative border-t py-12 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-background to-muted/50 -z-10" />
                 <div className="container">
@@ -398,6 +425,11 @@ export default function Home() {
                                 <li>
                                     <Link href="/settings" className="text-muted-foreground hover:text-primary transition-colors">
                                         Cài đặt hệ thống
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/r2-storage" className="text-muted-foreground hover:text-primary transition-colors">
+                                        R2 Storage
                                     </Link>
                                 </li>
                             </ul>

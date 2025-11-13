@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from "next/image";
-import { BookOpen, Users, Server, Settings, Download, Github, Menu, FileCode, AlertCircle } from "lucide-react";
+import { BookOpen, Users, Server, Settings, Download, Github, Menu, FileCode, AlertCircle, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navigation = [
@@ -24,6 +24,12 @@ const navigation = [
             { title: "Cài đặt Node", href: "/node-installation", icon: Download },
             { title: "API Reference", href: "/node-api", icon: FileCode },
             { title: "Xử lý sự cố", href: "/node-troubleshooting", icon: AlertCircle },
+        ],
+    },
+    {
+        title: "Cấu hình nâng cao",
+        items: [
+            { title: "R2 Storage", href: "/r2-storage", icon: Cloud },
         ],
     },
 ];

@@ -126,7 +126,7 @@ R2_DOWNLOAD_TOKEN=8638b5a1-77df-4d24-8253-58977fa508a4`}
                                 Trong R2 Dashboard, click vào <strong>Manage R2 API Tokens</strong> hoặc vào <strong>Account Details → R2 API Tokens</strong>
                             </p>
                             <div className="rounded-lg border bg-slate-50 p-4">
-                                <img 
+                                <img
                                     src="https://gist.github.com/user-attachments/assets/1ecff5e7-e35a-4c83-8003-c09c64480bf5"
                                     alt="R2 Account Details"
                                     className="w-full rounded-md border"
@@ -140,7 +140,7 @@ R2_DOWNLOAD_TOKEN=8638b5a1-77df-4d24-8253-58977fa508a4`}
                                 Click <strong>Create API Token</strong> để tạo credentials mới
                             </p>
                             <div className="rounded-lg border bg-slate-50 p-4">
-                                <img 
+                                <img
                                     src="https://gist.github.com/user-attachments/assets/33861852-48f1-45f0-9153-5f2acfc1d524"
                                     alt="Create API Token"
                                     className="w-full rounded-md border"
@@ -166,7 +166,7 @@ R2_DOWNLOAD_TOKEN=8638b5a1-77df-4d24-8253-58977fa508a4`}
                                 </li>
                             </ul>
                             <div className="rounded-lg border bg-slate-50 p-4">
-                                <img 
+                                <img
                                     src="https://gist.github.com/user-attachments/assets/44008443-9b37-48ee-959e-7c0e5f5fa37f"
                                     alt="Configure Permissions"
                                     className="w-full rounded-md border"
@@ -182,7 +182,7 @@ R2_DOWNLOAD_TOKEN=8638b5a1-77df-4d24-8253-58977fa508a4`}
                                 </AlertDescription>
                             </Alert>
                             <div className="rounded-lg border bg-slate-50 p-4 mb-3">
-                                <img 
+                                <img
                                     src="https://gist.github.com/user-attachments/assets/feb91625-6b67-4c48-b2dc-6f9004239a4d"
                                     alt="Save Credentials"
                                     className="w-full rounded-md border"
@@ -206,7 +206,7 @@ R2_DOWNLOAD_TOKEN=8638b5a1-77df-4d24-8253-58977fa508a4`}
                 >
                     <div className="space-y-4">
                         <div className="rounded-lg border bg-slate-50 p-4 mb-4">
-                            <img 
+                            <img
                                 src="https://gist.github.com/user-attachments/assets/ae9bc216-6cf2-4b4c-b4f1-f0c16e9b97c1"
                                 alt="Bucket Settings"
                                 className="w-full rounded-md border"
@@ -298,7 +298,7 @@ R2_DOWNLOAD_TOKEN=8638b5a1-77df-4d24-8253-58977fa508a4`}
                         </div>
 
                         <div className="rounded-lg border bg-slate-50 p-4 mb-4">
-                            <img 
+                            <img
                                 src="https://gist.github.com/user-attachments/assets/ac2b490d-3723-4601-b01a-0fdf8778c175"
                                 alt="Firewall Rule"
                                 className="w-full rounded-md border"
@@ -357,7 +357,7 @@ R2_DOWNLOAD_TOKEN=8638b5a1-77df-4d24-8253-58977fa508a4`}
                         <div>
                             <p className="font-semibold mb-2">Mở file .env</p>
                             <CodeBlock
-                                code="nano /opt/ovpanel/.env"
+                                code="nano /opt/ov-node/.env"
                                 title="Terminal"
                                 language="bash"
                             />
@@ -388,10 +388,10 @@ R2_DOWNLOAD_TOKEN=f7b3c2e1-9a8d-4f3e-b2c1-a0d9e8f7c6b5`}
                             <p className="font-semibold mb-2">Khởi động lại dịch vụ</p>
                             <CodeBlock
                                 code={`# Khởi động lại backend để load biến môi trường mới
-systemctl restart ovpanel
+systemctl restart ov-node
 
 # Kiểm tra trạng thái
-systemctl status ovpanel`}
+systemctl status ov-node`}
                                 title="Terminal"
                                 language="bash"
                             />
@@ -432,7 +432,7 @@ systemctl status ovpanel`}
             </div>
 
             <h2>Troubleshooting</h2>
-            
+
             <div className="space-y-4 my-6">
                 <details className="rounded-lg border-2 border-slate-200 bg-slate-50 p-4">
                     <summary className="font-semibold cursor-pointer text-slate-800">
