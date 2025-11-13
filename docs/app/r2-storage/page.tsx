@@ -542,41 +542,6 @@ systemctl status ov-node`}
                 </Alert>
             </div>
 
-            <h2>Tích hợp nâng cao</h2>
-            <p>R2 Storage không chỉ dùng cho file cấu hình, bạn có thể mở rộng để:</p>
-
-            <div className="grid md:grid-cols-2 gap-4 my-6">
-                <div className="rounded-lg border p-4 hover:shadow-lg transition-shadow">
-                    <h4 className="font-semibold text-primary mb-2">📊 Backup Database</h4>
-                    <p className="text-sm text-slate-600">
-                        Tự động backup PostgreSQL database lên R2 hàng ngày để đảm bảo an toàn dữ liệu.
-                    </p>
-                </div>
-                <div className="rounded-lg border p-4 hover:shadow-lg transition-shadow">
-                    <h4 className="font-semibold text-primary mb-2">📝 Log Storage</h4>
-                    <p className="text-sm text-slate-600">
-                        Lưu trữ application logs và audit logs dài hạn với chi phí thấp.
-                    </p>
-                </div>
-                <div className="rounded-lg border p-4 hover:shadow-lg transition-shadow">
-                    <h4 className="font-semibold text-primary mb-2">🎨 Static Assets</h4>
-                    <p className="text-sm text-slate-600">
-                        Serve images, stylesheets, scripts qua CDN toàn cầu của Cloudflare.
-                    </p>
-                </div>
-                <div className="rounded-lg border p-4 hover:shadow-lg transition-shadow">
-                    <h4 className="font-semibold text-primary mb-2">📦 Package Repository</h4>
-                    <p className="text-sm text-slate-600">
-                        Host các OpenVPN client packages (.exe, .deb, .apk) cho user download.
-                    </p>
-                </div>
-            </div>
-
-            <Alert variant="info">
-                <AlertDescription>
-                    <strong>Mẹo:</strong> Kết hợp R2 với Cloudflare Workers để xử lý file trước khi serve (resize image, compress, validate, etc.)
-                </AlertDescription>
-            </Alert>
 
             <h2>Tài liệu tham khảo</h2>
             <ul className="space-y-2">
