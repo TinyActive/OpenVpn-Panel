@@ -20,6 +20,12 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Settings APIs
+export const settingsAPI = {
+  // Get panel info (is_super_admin, instance_id)
+  getPanelInfo: () => apiClient.get('/settings/panel/info'),
+};
+
 // White-Label Instance Management APIs
 export const whiteLabelAPI = {
   // Initialize white-label system

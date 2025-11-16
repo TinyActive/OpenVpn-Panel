@@ -8,6 +8,7 @@ from backend.operations.server_info import get_server_info
 from backend.schema._input import SettingsUpdate
 from backend.schema.output import Settings, ServerInfo, ResponseModel
 from backend.operations.core_setting import change_config
+from backend.config import config
 
 router = APIRouter(prefix="/settings", tags=["Panel Settings"])
 
@@ -49,4 +50,17 @@ async def get_server_information(auth: dict = Depends(verify_jwt_or_api_key)):
         success=True,
         msg="Server information retrieved successfully",
         data=ServerInfo.from_orm(result),
+    )
+
+
+@router.get("/panel/info", response_model=ResponseModel)
+async def get_panel_info(auth: dict = Depends(verify_jwt_or_api_key)):
+    """Get panel configuration info (IS_SUPER_ADMIN, INSTANCE_ID, etc.)"""
+    return ResponseModel(
+        success=True,
+        msg="Panel info retrieved successfully",
+        data={
+            "is_super_admin": config.IS_SUPER_ADMIN,
+            "instance_id": config.INSTANCE_ID,
+        }
     )

@@ -20,6 +20,7 @@ class Setting(BaseSettings):
     # White-label configuration
     IS_SUPER_ADMIN: bool = False  # True if this is the super admin panel (no local OpenVPN)
     INSTANCE_ID: Optional[str] = None  # UUID for white-label instances
+    HAS_OPENVPN: bool = True  # Whether this instance has OpenVPN installed
 
     class Config:
         env_file = os.path.join(os.path.dirname(__file__), "..", ".env")

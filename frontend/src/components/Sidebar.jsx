@@ -1,11 +1,29 @@
 import { NavLink } from 'react-router-dom';
 import { FiGrid, FiUsers, FiServer, FiSettings, FiLayers } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react';
 import logoSrc from '../assets/Logo-Landscape-Dark.webp';
 import LanguageSwitcher from './LanguageSwitcher';
+import { settingsAPI } from '../services/api';
 
 const Sidebar = () => {
   const { t } = useTranslation();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    // Check if this is super admin panel
+    const checkPanelType = async () => {
+      try {
+        const response = await settingsAPI.getPanelInfo();
+        if (response.data.success) {
+          setIsSuperAdmin(response.data.data.is_super_admin);
+        }
+      } catch (error) {
+        console.error('Error checking panel type:', error);
+      }
+    };
+    checkPanelType();
+  }, []);
 
   return (
     <aside className="sidebar">
@@ -51,14 +69,16 @@ const Sidebar = () => {
               <span>{t('settings', 'Settings')}</span>
             </NavLink>
           </li>
-          <li>
-            <NavLink to="/whitelabel" className="nav-link">
-              <div className="icon-wrapper">
-                <FiLayers size={22} />
-              </div>
-              <span>White-Label</span>
-            </NavLink>
-          </li>
+          {isSuperAdmin && (
+            <li>
+              <NavLink to="/whitelabel" className="nav-link">
+                <div className="icon-wrapper">
+                  <FiLayers size={22} />
+                </div>
+                <span>White-Label</span>
+              </NavLink>
+            </li>
+          )}
         </ul>
       </nav>
       <div className="sidebar-footer">

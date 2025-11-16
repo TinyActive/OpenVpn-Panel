@@ -67,6 +67,7 @@ def generate_instance_config(
         "API_KEY": api_key,
         "IS_SUPER_ADMIN": "False",
         "INSTANCE_ID": instance_id,
+        "HAS_OPENVPN": str(has_openvpn),
     }
     
     return config
@@ -108,7 +109,8 @@ def write_env_file(config: Dict[str, str], env_file_path: Path) -> None:
     lines.append(f"API_KEY={config['API_KEY']}\n")
     lines.append("# White-Label Configuration")
     lines.append(f"IS_SUPER_ADMIN={config['IS_SUPER_ADMIN']}")
-    lines.append(f"INSTANCE_ID={config['INSTANCE_ID']}\n")
+    lines.append(f"INSTANCE_ID={config['INSTANCE_ID']}")
+    lines.append(f"HAS_OPENVPN={config.get('HAS_OPENVPN', 'False')}\n")
     
     with open(env_file_path, 'w') as f:
         f.write('\n'.join(lines))

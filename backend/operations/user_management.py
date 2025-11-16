@@ -3,12 +3,18 @@ import re
 import os
 
 from backend.logger import logger
+from backend.config import config
 
 
 script_path = "/root/openvpn-install.sh"
 
 
 def create_user_on_server(name, expiry_date) -> bool:
+    # Skip OpenVPN user creation if this instance doesn't have OpenVPN
+    if not config.HAS_OPENVPN:
+        logger.info(f"Skipping OpenVPN user creation for {name} (HAS_OPENVPN=False)")
+        return True
+    
     try:
         if not os.path.exists(script_path):
             logger.error("script not found on ")
@@ -45,6 +51,11 @@ def create_user_on_server(name, expiry_date) -> bool:
 
 
 def delete_user_on_server(name) -> bool | str:
+    # Skip OpenVPN user deletion if this instance doesn't have OpenVPN
+    if not config.HAS_OPENVPN:
+        logger.info(f"Skipping OpenVPN user deletion for {name} (HAS_OPENVPN=False)")
+        return True
+    
     try:
         if not os.path.exists(script_path):
             logger.error("script not found at %s", script_path)
@@ -120,6 +131,11 @@ def delete_user_on_server(name) -> bool | str:
 
 def download_ovpn_file(name: str) -> str | None:
     """This function returns the path of the ovpn file for downloading"""
+    # Skip if this instance doesn't have OpenVPN
+    if not config.HAS_OPENVPN:
+        logger.warning(f"Cannot download OVPN file for {name} (HAS_OPENVPN=False)")
+        return None
+    
     file_path = f"/root/{name}.ovpn"
     if os.path.exists(file_path):
         return file_path
