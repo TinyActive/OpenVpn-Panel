@@ -12,6 +12,15 @@ from colorama import Fore, Style, init
 
 init(autoreset=True)
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+INSTALL_DIR = SCRIPT_DIR  # Installation directory is where the script is
+VENV_DIR = os.path.join(INSTALL_DIR, "venv")
+DATA_DIR = os.path.join(INSTALL_DIR, "data")
+BACKEND_DIR = os.path.join(INSTALL_DIR, "backend")
+ENV_FILE = os.path.join(INSTALL_DIR, ".env")
+ENV_EXAMPLE = os.path.join(INSTALL_DIR, ".env.example")
+
 
 def create_secret_key(length: int = 64) -> str:
     random_bytes = secrets.token_bytes(length)
@@ -190,7 +199,7 @@ def setup_panel():
         bash.expect(pexpect.EOF, timeout=None)
         bash.close()
 
-        shutil.copy(".env.example", ".env")
+        shutil.copy(ENV_EXAMPLE, ENV_FILE)
 
         subprocess.run("clear")
         print(f"\n{Fore.YELLOW}Panel Configuration{Style.RESET_ALL}\n")
@@ -213,21 +222,20 @@ def setup_panel():
         }
 
         lines = []
-        with open(".env", "r") as f:
+        with open(ENV_FILE, "r") as f:
             for line in f:
                 for key, value in replacements.items():
                     if line.startswith(f"{key}="):
                         line = f"{key}={value}\n"
                 lines.append(line)
 
-        with open(".env", "w") as f:
+        with open(ENV_FILE, "w") as f:
             f.writelines(lines)
 
         # Create virtual environment if not exists
-        venv_dir = "/opt/ov-panel/venv"
-        if not os.path.exists(venv_dir):
+        if not os.path.exists(VENV_DIR):
             print(f"\n{Fore.YELLOW}Creating virtual environment...{Style.RESET_ALL}")
-            subprocess.run(["/usr/bin/python3", "-m", "venv", "venv"], check=True)
+            subprocess.run(["/usr/bin/python3", "-m", "venv", "venv"], check=True, cwd=INSTALL_DIR)
 
         install_dependencies()
         apply_migrations()
@@ -269,7 +277,7 @@ def setup_super_admin_panel():
         time.sleep(2)
         
         # Copy .env.example to .env
-        shutil.copy(".env.example", ".env")
+        shutil.copy(ENV_EXAMPLE, ENV_FILE)
         
         subprocess.run("clear")
         print(f"\n{Fore.YELLOW}Super Admin Panel Configuration{Style.RESET_ALL}\n")
@@ -298,7 +306,7 @@ def setup_super_admin_panel():
         }
         
         lines = []
-        with open(".env", "r") as f:
+        with open(ENV_FILE, "r") as f:
             for line in f:
                 updated = False
                 for key, value in replacements.items():
@@ -313,14 +321,13 @@ def setup_super_admin_panel():
             lines.append("\n# White-Label Configuration\n")
             lines.append("IS_SUPER_ADMIN=True\n")
         
-        with open(".env", "w") as f:
+        with open(ENV_FILE, "w") as f:
             f.writelines(lines)
         
         # Create virtual environment if not exists
-        venv_dir = "/opt/ov-panel/venv"
-        if not os.path.exists(venv_dir):
+        if not os.path.exists(VENV_DIR):
             print(f"\n{Fore.YELLOW}Creating virtual environment...{Style.RESET_ALL}")
-            subprocess.run(["/usr/bin/python3", "-m", "venv", "venv"], check=True)
+            subprocess.run(["/usr/bin/python3", "-m", "venv", "venv"], check=True, cwd=INSTALL_DIR)
         
         install_dependencies()
         apply_migrations()
@@ -355,7 +362,7 @@ def setup_super_admin_panel():
 
 
 def refresh_panel():
-    if not os.path.exists("/opt/ov-panel") or not os.path.exists(
+    if not os.path.exists(INSTALL_DIR) or not os.path.exists(
         "/etc/systemd/system/ov-panel.service"
     ):
         subprocess.run("clear")
@@ -376,11 +383,7 @@ def refresh_panel():
     print(f"\n{Fore.YELLOW}Updating OV-Panel...{Style.RESET_ALL}\n")
 
     try:
-        repo = "https://api.github.com/repos/primeZdev/ov-panel/releases/latest"
-        install_dir = "/opt/ov-panel"
-        env_file = os.path.join(install_dir, ".env")
-        data_dir = os.path.join(install_dir, "data")
-        venv_dir = os.path.join(install_dir, "venv")
+        repo = "https://api.github.com/repos/TinyActive/OpenVpn-Panel/releases/latest"
         backup_env = "/tmp/ovpanel_env_backup"
         backup_data = "/tmp/ovpanel_data_backup"
         backup_venv = "/tmp/ovpanel_venv_backup"
@@ -394,39 +397,44 @@ def refresh_panel():
         print(f"{Fore.YELLOW}Downloading latest version...{Style.RESET_ALL}")
         subprocess.run(["wget", "-O", filename, download_url], check=True)
 
-        if os.path.exists(env_file):
-            shutil.copy2(env_file, backup_env)
-        if os.path.exists(data_dir):
-            shutil.copytree(data_dir, backup_data, dirs_exist_ok=True)
-        if os.path.exists(venv_dir):
+        if os.path.exists(ENV_FILE):
+            shutil.copy2(ENV_FILE, backup_env)
+        if os.path.exists(DATA_DIR):
+            shutil.copytree(DATA_DIR, backup_data, dirs_exist_ok=True)
+        if os.path.exists(VENV_DIR):
             print(f"{Fore.YELLOW}Backing up virtual environment...{Style.RESET_ALL}")
-            shutil.copytree(venv_dir, backup_venv, dirs_exist_ok=True)
+            shutil.copytree(VENV_DIR, backup_venv, dirs_exist_ok=True)
 
-        if os.path.exists(install_dir):
-            shutil.rmtree(install_dir)
+        # Remove old files but keep backups
+        for item in os.listdir(INSTALL_DIR):
+            item_path = os.path.join(INSTALL_DIR, item)
+            if item not in ['.git', '.gitignore']:
+                if os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                else:
+                    os.remove(item_path)
 
-        os.makedirs(install_dir, exist_ok=True)
         subprocess.run(
-            ["tar", "-xzf", filename, "-C", install_dir, "--strip-components=1"],
+            ["tar", "-xzf", filename, "-C", INSTALL_DIR, "--strip-components=1"],
             check=True,
         )
 
         if os.path.exists(backup_env):
-            shutil.move(backup_env, env_file)
+            shutil.move(backup_env, ENV_FILE)
         if os.path.exists(backup_data):
-            if os.path.exists(data_dir):
-                shutil.rmtree(data_dir)
-            shutil.move(backup_data, data_dir)
+            if os.path.exists(DATA_DIR):
+                shutil.rmtree(DATA_DIR)
+            shutil.move(backup_data, DATA_DIR)
 
-        os.chdir(install_dir)
+        os.chdir(INSTALL_DIR)
         
         # Restore or create venv
         if os.path.exists(backup_venv):
             print(f"{Fore.YELLOW}Restoring virtual environment...{Style.RESET_ALL}")
-            shutil.move(backup_venv, venv_dir)
+            shutil.move(backup_venv, VENV_DIR)
         else:
             print(f"{Fore.YELLOW}Creating virtual environment...{Style.RESET_ALL}")
-            subprocess.run(["/usr/bin/python3", "-m", "venv", "venv"], check=True)
+            subprocess.run(["/usr/bin/python3", "-m", "venv", "venv"], check=True, cwd=INSTALL_DIR)
         
         install_dependencies()
         apply_migrations()
@@ -454,7 +462,7 @@ def refresh_panel():
 
 def restart_panel():
     try:
-        if not os.path.exists("/etc/openvpn") and not os.path.exists("/opt/ov-panel"):
+        if not os.path.exists("/etc/openvpn") and not os.path.exists(INSTALL_DIR):
             print(f"\n{Fore.RED}OV-Panel is not installed.{Style.RESET_ALL}")
             return
 
@@ -478,7 +486,7 @@ def restart_panel():
 
 def remove_panel():
     try:
-        if not os.path.exists("/etc/openvpn") and not os.path.exists("/opt/ov-panel"):
+        if not os.path.exists("/etc/openvpn") and not os.path.exists(INSTALL_DIR):
             subprocess.run("clear")
             print(
                 f"\n{Fore.YELLOW}OV-Panel is not installed on your system.{Style.RESET_ALL}"
@@ -544,20 +552,18 @@ def remove_panel():
 
 def apply_migrations() -> None:
     """Apply database migrations using Alembic"""
-    backend_dir = "/opt/ov-panel/backend"
-    data_dir = "/opt/ov-panel/data"
     current_dir = os.getcwd()
 
     try:
-        os.makedirs(data_dir, exist_ok=True)
-        os.chdir(backend_dir)
+        os.makedirs(DATA_DIR, exist_ok=True)
+        os.chdir(BACKEND_DIR)
         
         if not os.path.exists("alembic.ini"):
             print(f"{Fore.RED}Error: alembic.ini not found{Style.RESET_ALL}")
             return
 
         print(f"{Fore.YELLOW}Running database migrations...{Style.RESET_ALL}")
-        venv_alembic = "/opt/ov-panel/venv/bin/alembic"
+        venv_alembic = os.path.join(VENV_DIR, "bin", "alembic")
         
         subprocess.run([venv_alembic, "upgrade", "head"], check=True)
         print(f"{Fore.GREEN}Database migrations completed!{Style.RESET_ALL}")
@@ -571,17 +577,16 @@ def apply_migrations() -> None:
 
 def install_dependencies() -> None:
     """Install Python dependencies into virtual environment"""
-    print(f"{Fore.YELLOW}Installing dependencies...{Style.RESET_ALL}")
-    venv_dir = os.path.dirname(os.path.abspath(__file__))
-    venv_pip = os.path.join(venv_dir, "venv", "bin", "pip")
+    venv_pip = os.path.join(VENV_DIR, "bin", "pip")
+    pyproject_file = os.path.join(INSTALL_DIR, "pyproject.toml")
 
     try:
         print(f"{Fore.YELLOW}Installing dependencies...{Style.RESET_ALL}")
         
         subprocess.run([venv_pip, "install", "--upgrade", "pip"], check=True)
         
-        if os.path.exists("/opt/ov-panel/pyproject.toml"):
-            subprocess.run([venv_pip, "install", "-e", "."], check=True, cwd="/opt/ov-panel")
+        if os.path.exists(pyproject_file):
+            subprocess.run([venv_pip, "install", "-e", "."], check=True, cwd=INSTALL_DIR)
         
         print(f"{Fore.GREEN}Dependencies installed successfully!{Style.RESET_ALL}")
 
@@ -591,18 +596,20 @@ def install_dependencies() -> None:
 
 
 def start_service() -> None:
-    service_content = """
-[Unit]
+    venv_python = os.path.join(VENV_DIR, "bin", "python")
+    venv_bin = os.path.join(VENV_DIR, "bin")
+    
+    service_content = f"""[Unit]
 Description=OV-Panel App
 After=network.target
 
 [Service]
 User=root
-WorkingDirectory=/opt/ov-panel/
-ExecStart=/opt/ov-panel/venv/bin/python main.py
+WorkingDirectory={INSTALL_DIR}
+ExecStart={venv_python} main.py
 Restart=always
 RestartSec=5
-Environment="PATH=/opt/ov-panel/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PATH={venv_bin}:/usr/local/bin:/usr/bin:/bin"
 
 [Install]
 WantedBy=multi-user.target
