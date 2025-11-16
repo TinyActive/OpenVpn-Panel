@@ -16,23 +16,28 @@ class SystemdServiceManager:
     TEMPLATE_SERVICE_PATH = Path("/etc/systemd/system/ov-panel-instance@.service")
     
     @staticmethod
-    def create_service_template() -> bool:
+    def create_service_template(install_dir: str, venv_python: str) -> bool:
         """
         Create the systemd service template for white-label instances.
+        
+        Args:
+            install_dir: Installation directory of the main panel
+            venv_python: Path to venv python executable
         
         Returns:
             True if successful, False otherwise
         """
-        template_content = """[Unit]
+        template_content = f"""[Unit]
 Description=OV-Panel White-Label Instance %i
 After=network.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/ov-panel
+WorkingDirectory={install_dir}
+EnvironmentFile=/opt/ov-panel-instances/instance-%i/.env.%i
 Environment="INSTANCE_ID=%i"
-ExecStart=/opt/ov-panel/venv/bin/python main.py
+ExecStart={venv_python} main.py
 Restart=always
 RestartSec=5
 StandardOutput=append:/opt/ov-panel-instances/instance-%i/logs/output.log

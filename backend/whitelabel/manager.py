@@ -27,7 +27,39 @@ class WhiteLabelManager:
     
     BASE_PATH = Path("/opt/ov-panel-instances")
     SHARED_CODE_PATH = BASE_PATH / "shared"
-    SOURCE_CODE_PATH = Path("/opt/ov-panel")
+    SOURCE_CODE_PATH = None  # Will be set dynamically
+    
+    @staticmethod
+    def _get_source_code_path() -> Path:
+        """
+        Get the source code path from the main service file.
+        
+        Returns:
+            Path to the main OV-Panel installation
+        
+        Raises:
+            RuntimeError: If unable to detect source code path
+        """
+        if WhiteLabelManager.SOURCE_CODE_PATH is None:
+            try:
+                with open("/etc/systemd/system/ov-panel.service", "r") as f:
+                    content = f.read()
+                    
+                import re
+                working_dir_match = re.search(r'WorkingDirectory=(.+)', content)
+                
+                if working_dir_match:
+                    WhiteLabelManager.SOURCE_CODE_PATH = Path(working_dir_match.group(1).strip())
+                    logger.info(f"Detected source code path: {WhiteLabelManager.SOURCE_CODE_PATH}")
+                else:
+                    raise RuntimeError("Could not parse WorkingDirectory from main service file")
+            except FileNotFoundError:
+                raise RuntimeError("Main service file /etc/systemd/system/ov-panel.service not found")
+            except Exception as e:
+                logger.error(f"Error detecting source code path: {e}")
+                raise RuntimeError(f"Failed to detect source code path: {e}")
+        
+        return WhiteLabelManager.SOURCE_CODE_PATH
     
     @staticmethod
     def initialize_shared_directory() -> bool:
@@ -41,13 +73,17 @@ class WhiteLabelManager:
         try:
             WhiteLabelManager.BASE_PATH.mkdir(parents=True, exist_ok=True)
             
+            # Get source code path
+            source_code_path = WhiteLabelManager._get_source_code_path()
+            logger.info(f"Using source code path: {source_code_path}")
+            
             # Create shared directory if it doesn't exist
             if not WhiteLabelManager.SHARED_CODE_PATH.exists():
                 WhiteLabelManager.SHARED_CODE_PATH.mkdir(parents=True, exist_ok=True)
                 
                 # Create symlinks to main installation
                 for item in ["backend", "frontend", "main.py", "pyproject.toml"]:
-                    source = WhiteLabelManager.SOURCE_CODE_PATH / item
+                    source = source_code_path / item
                     target = WhiteLabelManager.SHARED_CODE_PATH / item
                     
                     if source.exists() and not target.exists():
@@ -187,18 +223,20 @@ class WhiteLabelManager:
         """
         try:
             instance_dir = WhiteLabelManager.BASE_PATH / f"instance-{instance_id}"
-            backend_dir = WhiteLabelManager.SOURCE_CODE_PATH / "backend"
+            source_code_path = WhiteLabelManager._get_source_code_path()
+            backend_dir = source_code_path / "backend"
+            venv_bin = source_code_path / "venv" / "bin"
             
             # Set environment variable for instance
             env = {
                 "INSTANCE_ID": instance_id,
-                "PATH": "/opt/ov-panel/venv/bin:/usr/local/bin:/usr/bin:/bin",
+                "PATH": f"{venv_bin}:/usr/local/bin:/usr/bin:/bin",
             }
             
             # Run alembic upgrade
-            venv_alembic = "/opt/ov-panel/venv/bin/alembic"
+            venv_alembic = venv_bin / "alembic"
             subprocess.run(
-                [venv_alembic, "upgrade", "head"],
+                [str(venv_alembic), "upgrade", "head"],
                 cwd=str(backend_dir),
                 env=env,
                 check=True,

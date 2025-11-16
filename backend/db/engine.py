@@ -10,17 +10,16 @@ def get_database_url():
     """
     Get database URL based on instance configuration.
     
-    For super admin panel: /opt/ov-panel/data/ov-panel.db
-    For white-label instances: /opt/ov-panel-instances/instance-{id}/data/ov-panel.db
-    For development: ./data/ov-panel.db
+    For white-label instances: Uses INSTANCE_ID env var to locate database
+    For super admin/standalone: Uses relative path from BASE_DIR
     """
     instance_id = os.getenv("INSTANCE_ID")
     
     if instance_id:
-        # White-label instance
+        # White-label instance - database is in instance-specific directory
         db_path = f"/opt/ov-panel-instances/instance-{instance_id}/data/ov-panel.db"
     else:
-        # Super admin panel or standalone installation
+        # Super admin panel or standalone installation - database is relative to code location
         db_path = f"{BASE_DIR.parent.parent}/data/ov-panel.db"
     
     return f"sqlite:///{db_path}"

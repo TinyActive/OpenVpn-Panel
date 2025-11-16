@@ -331,6 +331,40 @@ async def get_instance_stats(
         )
 
 
+def get_install_paths():
+    """
+    Get installation directory and venv python path from main service file.
+    
+    Returns:
+        Tuple of (install_dir, venv_python)
+    
+    Raises:
+        RuntimeError: If unable to read main service file
+    """
+    try:
+        with open("/etc/systemd/system/ov-panel.service", "r") as f:
+            content = f.read()
+            
+        # Extract WorkingDirectory and ExecStart
+        import re
+        working_dir_match = re.search(r'WorkingDirectory=(.+)', content)
+        exec_start_match = re.search(r'ExecStart=(.+?)\s+main\.py', content)
+        
+        if working_dir_match and exec_start_match:
+            install_dir = working_dir_match.group(1).strip()
+            venv_python = exec_start_match.group(1).strip()
+            logger.info(f"Detected install_dir: {install_dir}, venv_python: {venv_python}")
+            return install_dir, venv_python
+        else:
+            raise RuntimeError("Could not parse WorkingDirectory or ExecStart from service file")
+        
+    except FileNotFoundError:
+        raise RuntimeError("Main service file /etc/systemd/system/ov-panel.service not found")
+    except Exception as e:
+        logger.error(f"Error reading main service file: {e}")
+        raise RuntimeError(f"Failed to read main service file: {e}")
+
+
 @router.post("/initialize", response_model=ResponseModel)
 async def initialize_whitelabel_system(
     db: Session = Depends(get_db),
@@ -353,8 +387,12 @@ async def initialize_whitelabel_system(
                 data=None
             )
         
+        # Get installation paths from main service
+        install_dir, venv_python = get_install_paths()
+        logger.info(f"Using install_dir: {install_dir}, venv_python: {venv_python}")
+        
         # Create systemd service template
-        if not SystemdServiceManager.create_service_template():
+        if not SystemdServiceManager.create_service_template(install_dir, venv_python):
             return ResponseModel(
                 success=False,
                 msg="Failed to create systemd service template",
