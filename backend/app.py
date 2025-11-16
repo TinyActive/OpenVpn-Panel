@@ -56,12 +56,15 @@ def start_scheduler():
 async def startup_event():
     start_scheduler()
     
-    # Start node health check and sync scheduler
-    try:
-        node_scheduler.start()
-        logger.info("Node health check and sync scheduler started")
-    except Exception as e:
-        logger.error(f"Failed to start node scheduler: {e}")
+    # Start node health check and sync scheduler only if this instance has OpenVPN
+    if config.HAS_OPENVPN:
+        try:
+            node_scheduler.start()
+            logger.info("Node health check and sync scheduler started")
+        except Exception as e:
+            logger.error(f"Failed to start node scheduler: {e}")
+    else:
+        logger.info("Skipping node scheduler (HAS_OPENVPN=False)")
 
 
 @api.on_event("shutdown")

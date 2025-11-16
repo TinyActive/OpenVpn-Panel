@@ -227,15 +227,26 @@ class WhiteLabelManager:
             backend_dir = source_code_path / "backend"
             venv_bin = source_code_path / "venv" / "bin"
             
-            # Set environment variable for instance
-            env = {
-                "INSTANCE_ID": instance_id,
-                "PATH": f"{venv_bin}:/usr/local/bin:/usr/bin:/bin",
-            }
+            # Load instance .env file and set environment variables
+            import os
+            env = os.environ.copy()
+            env_file = instance_dir / f".env.{instance_id}"
+            
+            if env_file.exists():
+                with open(env_file, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#') and '=' in line:
+                            key, value = line.split('=', 1)
+                            env[key.strip()] = value.strip()
+            
+            # Ensure INSTANCE_ID is set
+            env["INSTANCE_ID"] = instance_id
+            env["PATH"] = f"{venv_bin}:/usr/local/bin:/usr/bin:/bin"
             
             # Run alembic upgrade
             venv_alembic = venv_bin / "alembic"
-            subprocess.run(
+            result = subprocess.run(
                 [str(venv_alembic), "upgrade", "head"],
                 cwd=str(backend_dir),
                 env=env,
@@ -245,7 +256,14 @@ class WhiteLabelManager:
             )
             
             logger.info(f"Database migrations completed for instance {instance_id}")
+            if result.stdout:
+                logger.debug(f"Migration output: {result.stdout}")
             return True
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to run migrations for instance {instance_id}: {e}")
+            if e.stderr:
+                logger.error(f"Migration error: {e.stderr}")
+            return False
         except Exception as e:
             logger.error(f"Failed to run migrations for instance {instance_id}: {e}")
             return False
