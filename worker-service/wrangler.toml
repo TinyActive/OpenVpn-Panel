@@ -1,0 +1,37 @@
+name = "openvpn-panel-worker"
+main = "src/main.py"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "openvpn_panel"
+database_id = "placeholder-create-with-wrangler-d1-create"
+
+# KV namespace for configuration
+[[kv_namespaces]]
+binding = "CONFIG"
+id = "placeholder-create-with-wrangler-kv-namespace-create"
+
+# R2 bucket for frontend assets
+[[r2_buckets]]
+binding = "FRONTEND_ASSETS"
+bucket_name = "openvpn-panel-frontend"
+
+# Cron triggers for scheduled tasks
+[triggers]
+crons = [
+  "0 0 * * *",      # Daily user expiry check at midnight UTC
+  "*/1 * * * *",    # Health check every minute
+  "*/5 * * * *"     # Full sync every 5 minutes
+]
+
+# Python Workers configuration
+[build]
+command = ""
+
+[build.upload]
+format = "python"
+
+
+

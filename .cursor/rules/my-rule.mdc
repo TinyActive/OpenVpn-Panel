@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+Do not create system documents because they are not necessary. Only write documents when required. Strictly prohibit writing project documents on your own.
+Do not create junk tools like test, debug, unnecessary files for the project
+Newly generated code must be scientifically designed to minimize duplicate code, ensure there are no serious vulnerabilities
