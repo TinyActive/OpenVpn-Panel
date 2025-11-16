@@ -573,7 +573,7 @@ def install_dependencies() -> None:
     """Install Python dependencies into virtual environment"""
     print(f"{Fore.YELLOW}Installing dependencies...{Style.RESET_ALL}")
     venv_dir = os.path.dirname(os.path.abspath(__file__))
-    venv_pip = os.path.join(venv_dir, "bin", "pip")
+    venv_pip = os.path.join(venv_dir, "venv", "bin", "pip")
 
     try:
         print(f"{Fore.YELLOW}Installing dependencies...{Style.RESET_ALL}")
