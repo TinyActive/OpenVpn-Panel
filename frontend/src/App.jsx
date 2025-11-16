@@ -7,6 +7,7 @@ import ServerStats from './pages/ServerStats';
 import UserManagement from './pages/UserManagement';
 import NodeManagement from './pages/NodeManagement';
 import SettingsPage from './pages/SettingsPage';
+import WhiteLabelManagement from './pages/WhiteLabelManagement';
 
 import favicon from './assets/fav.webp';
 
@@ -39,6 +40,7 @@ function App() {
         <Route path="users" element={<UserManagement />} />
         <Route path="nodes" element={<NodeManagement />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="whitelabel" element={<WhiteLabelManagement />} />
       </Route>
       <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
     </Routes>

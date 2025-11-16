@@ -110,11 +110,12 @@ def show_menu():
     print(f"{Fore.YELLOW}Please choose an option:{Style.RESET_ALL}\n")
 
     options = [
-        ("1", "Install", Fore.GREEN),
-        ("2", "Update", Fore.CYAN),
-        ("3", "Restart", Fore.BLUE),
-        ("4", "Uninstall", Fore.RED),
-        ("5", "Exit", Fore.YELLOW),
+        ("1", "Install as Standalone Panel (with OpenVPN)", Fore.GREEN),
+        ("2", "Install as Super Admin Panel (White-Label Manager)", Fore.MAGENTA),
+        ("3", "Update", Fore.CYAN),
+        ("4", "Restart", Fore.BLUE),
+        ("5", "Uninstall", Fore.RED),
+        ("6", "Exit", Fore.YELLOW),
     ]
 
     for num, desc, color in options:
@@ -128,11 +129,11 @@ def ask_choice():
         try:
             choice = input(f"{Fore.YELLOW}Enter your choice: {Style.RESET_ALL}")
 
-            if choice in ["1", "2", "3", "4", "5"]:
+            if choice in ["1", "2", "3", "4", "5", "6"]:
                 return choice
             else:
                 print(
-                    f"\n{Fore.RED}Invalid choice. Please enter a number between 1-5{Style.RESET_ALL}"
+                    f"\n{Fore.RED}Invalid choice. Please enter a number between 1-6{Style.RESET_ALL}"
                 )
                 time.sleep(2)
                 show_menu()
@@ -244,6 +245,105 @@ def setup_panel():
             sys.exit(0)
         main_menu()
 
+    except Exception as e:
+        print(f"\n{Fore.RED}Installation failed: {e}{Style.RESET_ALL}")
+        try:
+            input(f"\n{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
+
+
+def setup_super_admin_panel():
+    """
+    Install OV-Panel as Super Admin Panel (White-Label Manager).
+    This installation does NOT include OpenVPN server.
+    """
+    try:
+        subprocess.run("clear")
+        print(f"\n{Fore.MAGENTA}Installing Super Admin Panel (White-Label Manager){Style.RESET_ALL}\n")
+        print(f"{Fore.YELLOW}Note: This installation will NOT include OpenVPN server.{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}You will be able to manage multiple white-label instances.{Style.RESET_ALL}\n")
+        
+        time.sleep(2)
+        
+        # Copy .env.example to .env
+        shutil.copy(".env.example", ".env")
+        
+        subprocess.run("clear")
+        print(f"\n{Fore.YELLOW}Super Admin Panel Configuration{Style.RESET_ALL}\n")
+        
+        panel_username = ask_user(f"{Fore.GREEN}> Super Admin username: {Style.RESET_ALL}")
+        panel_password = ask_password(f"{Fore.RED}> Super Admin password: {Style.RESET_ALL}")
+        panel_port = ask_user(
+            f"{Fore.GREEN}> Panel port number (default 9000): {Style.RESET_ALL}", 
+            input_type="port"
+        )
+        panel_path = ask_user(
+            f"{Fore.GREEN}> Panel path (optional, default 'dashboard'): {Style.RESET_ALL}", 
+            allow_empty=True
+        )
+        
+        if not panel_path:
+            panel_path = "dashboard"
+        
+        replacements = {
+            "ADMIN_USERNAME": panel_username,
+            "ADMIN_PASSWORD": panel_password,
+            "PORT": panel_port,
+            "URLPATH": panel_path,
+            "JWT_SECRET_KEY": create_secret_key(),
+            "IS_SUPER_ADMIN": "True",  # Mark as super admin
+        }
+        
+        lines = []
+        with open(".env", "r") as f:
+            for line in f:
+                updated = False
+                for key, value in replacements.items():
+                    if line.startswith(f"{key}="):
+                        line = f"{key}={value}\n"
+                        updated = True
+                        break
+                lines.append(line)
+        
+        # Add IS_SUPER_ADMIN if not present
+        if not any("IS_SUPER_ADMIN" in line for line in lines):
+            lines.append("\n# White-Label Configuration\n")
+            lines.append("IS_SUPER_ADMIN=True\n")
+        
+        with open(".env", "w") as f:
+            f.writelines(lines)
+        
+        # Create virtual environment if not exists
+        venv_dir = "/opt/ov-panel/venv"
+        if not os.path.exists(venv_dir):
+            print(f"\n{Fore.YELLOW}Creating virtual environment...{Style.RESET_ALL}")
+            subprocess.run(["/usr/bin/python3", "-m", "venv", "venv"], check=True)
+        
+        install_dependencies()
+        apply_migrations()
+        
+        # Initialize white-label system directories
+        print(f"\n{Fore.YELLOW}Initializing white-label system...{Style.RESET_ALL}")
+        os.makedirs("/opt/ov-panel-instances", exist_ok=True)
+        
+        subprocess.run("clear")
+        print(f"\n{Fore.GREEN}Super Admin Panel Installation Complete!{Style.RESET_ALL}\n")
+        print(f"{Fore.CYAN}You can now manage white-label instances from the panel.{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Access the panel at: http://{get_server_ip()}:{panel_port}/{panel_path}{Style.RESET_ALL}\n")
+        
+        display_panel_info(panel_username, panel_password, panel_port, panel_path)
+        
+        start_service()
+        try:
+            input(f"{Fore.YELLOW}Press Enter to return to menu...{Style.RESET_ALL}")
+        except KeyboardInterrupt:
+            print(f"\n\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
+            sys.exit(0)
+        main_menu()
+    
     except Exception as e:
         print(f"\n{Fore.RED}Installation failed: {e}{Style.RESET_ALL}")
         try:
@@ -534,12 +634,14 @@ def main_menu():
         if choice == "1":
             setup_panel()
         elif choice == "2":
-            refresh_panel()
+            setup_super_admin_panel()
         elif choice == "3":
-            restart_panel()
+            refresh_panel()
         elif choice == "4":
-            remove_panel()
+            restart_panel()
         elif choice == "5":
+            remove_panel()
+        elif choice == "6":
             print(f"\n{Fore.GREEN}Thank you for using OV-Panel!{Style.RESET_ALL}\n")
             sys.exit()
     except KeyboardInterrupt:

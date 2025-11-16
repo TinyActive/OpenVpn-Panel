@@ -30,3 +30,19 @@ class SettingsUpdate(BaseModel):
     tunnel_address: Optional[str] = None
     port: Optional[int]
     protocol: Optional[str]
+
+
+# White-label instance schemas
+class WhiteLabelInstanceCreate(BaseModel):
+    name: str = Field(min_length=3, max_length=50)
+    admin_username: str = Field(min_length=3, max_length=50)
+    admin_password: str = Field(min_length=6)
+    port: int = Field(ge=1024, le=65535)
+    has_openvpn: bool = Field(default=False)
+
+
+class WhiteLabelInstanceUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=3, max_length=50)
+    admin_username: Optional[str] = Field(None, min_length=3, max_length=50)
+    admin_password: Optional[str] = Field(None, min_length=6)
+    port: Optional[int] = Field(None, ge=1024, le=65535)

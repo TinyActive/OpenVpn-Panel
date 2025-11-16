@@ -53,3 +53,20 @@ class Settings(Base):
     tunnel_address: Mapped[str] = mapped_column(nullable=True)
     port: Mapped[int] = mapped_column(default=1194, nullable=False)
     protocol: Mapped[str] = mapped_column(default="tcp", nullable=False)
+
+
+class WhiteLabelInstance(Base):
+    __tablename__ = "whitelabel_instances"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    instance_id: Mapped[str] = mapped_column(unique=True, index=True)  # UUID
+    name: Mapped[str] = mapped_column()  # Tên instance
+    port: Mapped[int] = mapped_column(unique=True)
+    status: Mapped[str] = mapped_column(default="stopped")  # active, stopped, error
+    admin_username: Mapped[str] = mapped_column()
+    admin_password_hash: Mapped[str] = mapped_column()
+    jwt_secret: Mapped[str] = mapped_column()
+    api_key: Mapped[Optional[str]] = mapped_column(nullable=True)
+    has_openvpn: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, onupdate=datetime.utcnow)

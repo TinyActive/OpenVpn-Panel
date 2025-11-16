@@ -47,3 +47,29 @@ class Admins(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# White-label instance output schemas
+class WhiteLabelInstanceOutput(BaseModel):
+    id: int
+    instance_id: str
+    name: str
+    port: int
+    status: str
+    admin_username: str
+    has_openvpn: bool
+    created_at: Any
+    updated_at: Any
+
+    class Config:
+        from_attributes = True
+
+
+class WhiteLabelInstanceStats(BaseModel):
+    instance_id: str
+    name: str
+    port: int
+    status: str
+    systemd_status: Optional[str] = None
+    output_log_size: Optional[int] = None
+    error_log_size: Optional[int] = None

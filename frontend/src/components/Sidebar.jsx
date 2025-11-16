@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { FiGrid, FiUsers, FiServer, FiSettings } from 'react-icons/fi';
+import { FiGrid, FiUsers, FiServer, FiSettings, FiLayers } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 import logoSrc from '../assets/Logo-Landscape-Dark.webp';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -49,6 +49,14 @@ const Sidebar = () => {
                 <FiSettings size={22} />
               </div>
               <span>{t('settings', 'Settings')}</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/whitelabel" className="nav-link">
+              <div className="icon-wrapper">
+                <FiLayers size={22} />
+              </div>
+              <span>White-Label</span>
             </NavLink>
           </li>
         </ul>
