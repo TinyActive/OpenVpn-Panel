@@ -571,7 +571,9 @@ def apply_migrations() -> None:
 
 def install_dependencies() -> None:
     """Install Python dependencies into virtual environment"""
-    venv_pip = "/opt/ov-panel/venv/bin/pip"
+    print(f"{Fore.YELLOW}Installing dependencies...{Style.RESET_ALL}")
+    venv_dir = os.path.dirname(os.path.abspath(__file__))
+    venv_pip = os.path.join(venv_dir, "bin", "pip")
 
     try:
         print(f"{Fore.YELLOW}Installing dependencies...{Style.RESET_ALL}")
