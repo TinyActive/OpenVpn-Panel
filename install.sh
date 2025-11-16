@@ -76,16 +76,16 @@ echo -e "${YELLOW}Updating system packages...${NC}"
 apt update -y
 apt install -y python3 python3-pip python3-venv wget curl git
 
-if [ ! -d "$INSTALL_DIR" ]; then
-    echo -e "${YELLOW}Cloning repository from $REPO_URL...${NC}"
-    git clone "$REPO_URL" "$INSTALL_DIR"
-else
-    echo -e "${YELLOW}Directory exists, pulling latest changes...${NC}"
-    cd "$INSTALL_DIR"
-    git pull
-fi
+# if [ ! -d "$INSTALL_DIR" ]; then
+#     echo -e "${YELLOW}Cloning repository from $REPO_URL...${NC}"
+#     git clone "$REPO_URL" "$INSTALL_DIR"
+# else
+#     echo -e "${YELLOW}Directory exists, pulling latest changes...${NC}"
+#     cd "$INSTALL_DIR"
+#     git pull
+# fi
 
-cd "$INSTALL_DIR"
+# cd "$INSTALL_DIR"
 
 echo -e "${YELLOW}Creating Python virtual environment...${NC}"
 $PYTHON -m venv venv
