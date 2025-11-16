@@ -332,9 +332,32 @@ def setup_super_admin_panel():
         install_dependencies()
         apply_migrations()
         
-        # Initialize white-label system directories
+        # Initialize white-label system directories and template database
         print(f"\n{Fore.YELLOW}Initializing white-label system...{Style.RESET_ALL}")
         os.makedirs("/opt/ov-panel-instances", exist_ok=True)
+        os.makedirs("/opt/ov-panel-instances/template", exist_ok=True)
+        
+        # Create template database
+        print(f"{Fore.YELLOW}Creating template database for instances...{Style.RESET_ALL}")
+        try:
+            venv_alembic = os.path.join(VENV_DIR, "bin", "alembic")
+            venv_bin = os.path.join(VENV_DIR, "bin")
+            
+            env = os.environ.copy()
+            env["INSTANCE_ID"] = "template"
+            env["PATH"] = f"{venv_bin}:/usr/local/bin:/usr/bin:/bin"
+            
+            subprocess.run(
+                [venv_alembic, "upgrade", "head"],
+                cwd=BACKEND_DIR,
+                env=env,
+                check=True,
+                capture_output=True
+            )
+            print(f"{Fore.GREEN}Template database created successfully!{Style.RESET_ALL}")
+        except Exception as e:
+            print(f"{Fore.YELLOW}Warning: Failed to create template database: {e}{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}You can create it later from the panel UI.{Style.RESET_ALL}")
         
         subprocess.run("clear")
         print(f"\n{Fore.GREEN}Super Admin Panel Installation Complete!{Style.RESET_ALL}\n")

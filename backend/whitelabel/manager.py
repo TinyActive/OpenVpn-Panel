@@ -27,6 +27,7 @@ class WhiteLabelManager:
     
     BASE_PATH = Path("/opt/ov-panel-instances")
     SHARED_CODE_PATH = BASE_PATH / "shared"
+    TEMPLATE_DB_PATH = BASE_PATH / "template" / "ov-panel.db"
     SOURCE_CODE_PATH = None  # Will be set dynamically
     
     @staticmethod
@@ -62,10 +63,91 @@ class WhiteLabelManager:
         return WhiteLabelManager.SOURCE_CODE_PATH
     
     @staticmethod
+    def create_template_database() -> bool:
+        """
+        Create a template database with all tables migrated and default data seeded.
+        This template will be copied for each new instance.
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            template_dir = WhiteLabelManager.TEMPLATE_DB_PATH.parent
+            template_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Remove old template if exists
+            if WhiteLabelManager.TEMPLATE_DB_PATH.exists():
+                WhiteLabelManager.TEMPLATE_DB_PATH.unlink()
+            
+            source_code_path = WhiteLabelManager._get_source_code_path()
+            backend_dir = source_code_path / "backend"
+            venv_bin = source_code_path / "venv" / "bin"
+            
+            # Create a temporary instance ID for template
+            template_instance_id = "template"
+            
+            # Set environment variables to point to template database
+            import os
+            env = os.environ.copy()
+            env["INSTANCE_ID"] = template_instance_id
+            env["PATH"] = f"{venv_bin}:/usr/local/bin:/usr/bin:/bin"
+            
+            # Run alembic to create template database
+            venv_alembic = venv_bin / "alembic"
+            result = subprocess.run(
+                [str(venv_alembic), "upgrade", "head"],
+                cwd=str(backend_dir),
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            
+            # Seed default settings data
+            from sqlalchemy import create_engine
+            from sqlalchemy.orm import sessionmaker
+            from backend.db.models import Settings
+            
+            db_url = f"sqlite:///{WhiteLabelManager.TEMPLATE_DB_PATH}"
+            engine = create_engine(db_url, connect_args={"check_same_thread": False})
+            SessionLocal = sessionmaker(bind=engine, autoflush=False)
+            db = SessionLocal()
+            
+            try:
+                # Check if settings already exists
+                existing_settings = db.query(Settings).first()
+                if not existing_settings:
+                    # Create default settings
+                    default_settings = Settings(
+                        port=1194,
+                        protocol="tcp",
+                        tunnel_address=None
+                    )
+                    db.add(default_settings)
+                    db.commit()
+                    logger.info("Default settings seeded to template database")
+            finally:
+                db.close()
+            
+            logger.info("Template database created successfully")
+            if result.stdout:
+                logger.debug(f"Template DB creation output: {result.stdout}")
+            
+            return True
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to create template database: {e}")
+            if e.stderr:
+                logger.error(f"Template DB error: {e.stderr}")
+            return False
+        except Exception as e:
+            logger.error(f"Failed to create template database: {e}")
+            return False
+    
+    @staticmethod
     def initialize_shared_directory() -> bool:
         """
         Initialize the shared code directory for white-label instances.
-        Creates symlinks to the main OV-Panel installation.
+        Creates symlinks to the main OV-Panel installation and template database.
         
         Returns:
             True if successful, False otherwise
@@ -95,6 +177,11 @@ class WhiteLabelManager:
                             target.symlink_to(source)
                 
                 logger.info("Shared directory initialized successfully")
+            
+            # Create template database if it doesn't exist
+            if not WhiteLabelManager.TEMPLATE_DB_PATH.exists():
+                logger.info("Creating template database...")
+                WhiteLabelManager.create_template_database()
             
             return True
         except Exception as e:
@@ -199,8 +286,15 @@ class WhiteLabelManager:
             db.commit()
             db.refresh(instance)
             
-            # Run database migrations for the instance
-            WhiteLabelManager._run_instance_migrations(instance_id)
+            # Copy template database instead of running migrations
+            instance_db_path = data_dir / "ov-panel.db"
+            if WhiteLabelManager.TEMPLATE_DB_PATH.exists():
+                shutil.copy2(WhiteLabelManager.TEMPLATE_DB_PATH, instance_db_path)
+                logger.info(f"Copied template database to instance {instance_id}")
+            else:
+                # Fallback: run migrations if template doesn't exist
+                logger.warning("Template database not found, running migrations...")
+                WhiteLabelManager._run_instance_migrations(instance_id)
             
             logger.info(f"Instance {instance_id} ({name}) created successfully")
             return instance
@@ -405,6 +499,22 @@ class WhiteLabelManager:
         except Exception as e:
             logger.error(f"Failed to get stats for instance {instance_id}: {e}")
             return None
+    
+    @staticmethod
+    def get_instance(db: Session, instance_id: str) -> Optional[WhiteLabelInstance]:
+        """
+        Get a white-label instance by ID.
+        
+        Args:
+            db: Database session
+            instance_id: Instance identifier
+        
+        Returns:
+            WhiteLabelInstance or None if not found
+        """
+        return db.query(WhiteLabelInstance).filter(
+            WhiteLabelInstance.instance_id == instance_id
+        ).first()
     
     @staticmethod
     def list_instances(db: Session) -> List[WhiteLabelInstance]:
