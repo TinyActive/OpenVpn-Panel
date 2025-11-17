@@ -1,13 +1,16 @@
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 import asyncio
+from uuid import uuid4
 
 from backend.logger import logger
-from backend.schema._input import NodeCreate
+from backend.schema._input import NodeCreate, NodeAutoInstall
 from .requests import NodeRequests
 from backend.db import crud
 from .health_check import HealthCheckService
 from .sync import SyncService
+from .ssh_installer import SSHNodeInstaller
+from .secure_config import get_secure_config_manager
 
 
 async def add_node_handler(request: NodeCreate, db: Session) -> dict:
@@ -288,5 +291,160 @@ async def delete_user_on_all_nodes(name: str, db: Session):
     logger.info(
         f"User '{name}' deleted from {success_count}/{total_nodes} nodes"
     )
+
+
+async def auto_install_node_handler(request: NodeAutoInstall, db: Session) -> dict:
+    """
+    Automatically install and configure a new node via SSH
+    
+    Args:
+        request: NodeAutoInstall schema with SSH and R2 configuration
+        db: Database session
+    
+    Returns:
+        dict with installation status and details
+    """
+    try:
+        logger.info(f"Starting auto-install for node: {request.ssh.host}")
+        
+        # Generate unique API key for this node
+        api_key = str(uuid4())
+        
+        # Step 1: Test SSH connection first
+        installer = SSHNodeInstaller(
+            host=request.ssh.host,
+            port=request.ssh.port,
+            username=request.ssh.username,
+            password=request.ssh.password if not request.ssh.use_key else None,
+            key_filename=None  # TODO: Handle key_content properly
+        )
+        
+        logger.info(f"Testing SSH connection to {request.ssh.host}:{request.ssh.port}")
+        success, message = installer.test_connection()
+        
+        if not success:
+            logger.error(f"SSH connection test failed: {message}")
+            return {
+                "success": False,
+                "error": message,
+                "step": "ssh_connection_test"
+            }
+        
+        logger.info(f"SSH connection successful: {message}")
+        
+        # Step 2: Get server info
+        server_info = installer.get_server_info()
+        logger.info(f"Server info: {server_info}")
+        
+        # Prepare R2 configuration
+        r2_config = {
+            "access_key_id": request.r2.access_key_id,
+            "secret_access_key": request.r2.secret_access_key,
+            "bucket_name": request.r2.bucket_name,
+            "account_id": request.r2.account_id,
+            "public_base_url": request.r2.public_base_url,
+            "download_token": request.r2.download_token
+        }
+        
+        # Step 3: Install node via SSH
+        logger.info(f"Starting node installation on {request.ssh.host}")
+        success, install_message, install_details = installer.install_node(
+            node_port=request.node_port,
+            api_key=api_key,
+            r2_config=r2_config,
+            protocol=request.protocol,
+            ovpn_port=request.ovpn_port
+        )
+        
+        if not success:
+            logger.error(f"Node installation failed: {install_message}")
+            return {
+                "success": False,
+                "error": install_message,
+                "step": "node_installation",
+                "details": install_details
+            }
+        
+        logger.info(f"Node installation successful: {install_message}")
+        
+        # Step 4: Save encrypted credentials
+        secure_manager = get_secure_config_manager()
+        
+        ssh_config = {
+            "host": request.ssh.host,
+            "port": request.ssh.port,
+            "username": request.ssh.username,
+            "password": request.ssh.password,
+            "use_key": request.ssh.use_key,
+            "key_content": request.ssh.key_content
+        }
+        
+        node_config = {
+            "port": request.node_port,
+            "api_key": api_key,
+            "protocol": request.protocol,
+            "ovpn_port": request.ovpn_port
+        }
+        
+        credentials_saved = secure_manager.save_node_credentials(
+            node_address=request.ssh.host,
+            ssh_config=ssh_config,
+            r2_config=r2_config,
+            node_config=node_config
+        )
+        
+        if not credentials_saved:
+            logger.warning(f"Failed to save encrypted credentials for {request.ssh.host}")
+        
+        # Step 5: Add node to database
+        # Use public IP from server_info if available, otherwise use SSH host
+        node_address = server_info.get("public_ip", request.ssh.host)
+        
+        node_create = NodeCreate(
+            name=request.name,
+            address=node_address,
+            tunnel_address=request.tunnel_address,
+            protocol=request.protocol,
+            ovpn_port=request.ovpn_port,
+            port=request.node_port,
+            key=api_key,
+            status=request.status,
+            set_new_setting=request.set_new_setting
+        )
+        
+        # Add node and sync users
+        add_result = await add_node_handler(node_create, db)
+        
+        if add_result.get("success"):
+            logger.info(f"Node {node_address} added to database and users synced")
+            
+            return {
+                "success": True,
+                "message": "Node installed and configured successfully",
+                "node_address": node_address,
+                "node_port": request.node_port,
+                "server_info": server_info,
+                "installation_details": install_details,
+                "sync_info": add_result.get("sync_info", {}),
+                "credentials_saved": credentials_saved
+            }
+        else:
+            logger.error(f"Failed to add node to database: {add_result.get('error')}")
+            return {
+                "success": False,
+                "error": "Node installed but failed to add to database",
+                "node_address": node_address,
+                "installation_details": install_details,
+                "db_error": add_result.get("error")
+            }
+    
+    except Exception as e:
+        logger.error(f"Auto-install failed with exception: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Installation failed: {str(e)}",
+            "step": "exception"
+        }
+
     
     return results

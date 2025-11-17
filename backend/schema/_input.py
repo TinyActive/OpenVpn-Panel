@@ -26,6 +26,39 @@ class NodeCreate(BaseModel):
     set_new_setting: bool = Field(default=False)
 
 
+class SSHConfig(BaseModel):
+    """SSH configuration for auto-installing node"""
+    host: str
+    port: int = Field(default=22)
+    username: str = Field(default="root")
+    password: Optional[str] = None
+    use_key: bool = Field(default=False)
+    key_content: Optional[str] = None  # SSH private key content
+
+
+class R2Config(BaseModel):
+    """Cloudflare R2 storage configuration"""
+    access_key_id: str
+    secret_access_key: str
+    bucket_name: str
+    account_id: str
+    public_base_url: str = Field(default="api.openvpn.panel")
+    download_token: str = Field(default="8638b5a1-77df-4d24-8253-58977fa508a4")
+
+
+class NodeAutoInstall(BaseModel):
+    """Schema for auto-installing a new node via SSH"""
+    name: str = Field(max_length=10)
+    ssh: SSHConfig
+    r2: R2Config
+    protocol: str = Field(default="tcp")
+    ovpn_port: int = Field(default=1194)
+    node_port: int = Field(default=9090, description="Port for OV-Node service")
+    tunnel_address: Optional[str] = None
+    status: bool = Field(default=True)
+    set_new_setting: bool = Field(default=False)
+
+
 class SettingsUpdate(BaseModel):
     tunnel_address: Optional[str] = None
     port: Optional[int]

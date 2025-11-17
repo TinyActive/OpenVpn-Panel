@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from backend.auth.auth import verify_jwt_or_api_key
 from backend.db.engine import get_db
 from backend.schema.output import ResponseModel
-from backend.schema._input import NodeCreate
+from backend.schema._input import NodeCreate, NodeAutoInstall
 from backend.node.task import (
     add_node_handler,
     update_node_handler,
@@ -14,6 +14,7 @@ from backend.node.task import (
     download_ovpn_from_best_node,
     list_nodes_handler,
     get_node_status_handler,
+    auto_install_node_handler,
 )
 from backend.node.health_check import HealthCheckService
 from backend.node.sync import SyncService
@@ -45,6 +46,51 @@ async def add_node(
             msg = f"Node added successfully. {synced}/{total} users synced ({failed} failed)."
     else:
         msg = result.get("error", "Failed to add node")
+    
+    return ResponseModel(
+        success=result.get("success", False),
+        msg=msg,
+        data=result
+    )
+
+
+@router.post("/auto-install", response_model=ResponseModel)
+async def auto_install_node(
+    request: NodeAutoInstall,
+    db: Session = Depends(get_db),
+    auth: dict = Depends(verify_jwt_or_api_key),
+):
+    """
+    Automatically install and configure a new node via SSH.
+    
+    This endpoint will:
+    1. Connect to the server via SSH
+    2. Install all required dependencies
+    3. Install and configure OpenVPN
+    4. Install and configure OV-Node
+    5. Configure R2 storage
+    6. Start the node service
+    7. Add the node to the panel
+    8. Sync all existing users
+    
+    The process may take 5-10 minutes depending on server speed.
+    """
+    result = await auto_install_node_handler(request, db)
+    
+    if result.get("success"):
+        sync_info = result.get("sync_info", {})
+        total = sync_info.get("total_users", 0)
+        synced = sync_info.get("synced", 0)
+        failed = sync_info.get("failed", 0)
+        
+        if total == 0:
+            msg = "Node installed and configured successfully. No users to sync."
+        elif failed == 0:
+            msg = f"Node installed successfully. All {synced} users synced to the new node."
+        else:
+            msg = f"Node installed successfully. {synced}/{total} users synced ({failed} failed)."
+    else:
+        msg = result.get("error", "Failed to install node")
     
     return ResponseModel(
         success=result.get("success", False),
