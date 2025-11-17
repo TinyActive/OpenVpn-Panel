@@ -56,10 +56,10 @@ const InstanceTable = ({ instances, onStart, onStop, onRestart, onDelete }) => {
               </td>
               <td>{instance.port}</td>
               <td>
-                <span style={{ 
-                  padding: '4px 12px', 
-                  borderRadius: '12px', 
-                  fontSize: '12px', 
+                <span style={{
+                  padding: '4px 12px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
                   fontWeight: '600',
                   ...getStatusBadge(instance.status)
                 }}>
@@ -68,10 +68,10 @@ const InstanceTable = ({ instances, onStart, onStop, onRestart, onDelete }) => {
               </td>
               <td>{instance.admin_username}</td>
               <td>
-                <span style={{ 
-                  padding: '4px 8px', 
-                  borderRadius: '8px', 
-                  fontSize: '12px', 
+                <span style={{
+                  padding: '4px 8px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
                   fontWeight: '600',
                   background: 'rgba(1, 195, 168, 0.1)',
                   color: 'var(--success-color)'
@@ -80,10 +80,10 @@ const InstanceTable = ({ instances, onStart, onStop, onRestart, onDelete }) => {
                 </span>
               </td>
               <td>
-                <span style={{ 
-                  padding: '4px 8px', 
-                  borderRadius: '8px', 
-                  fontSize: '12px', 
+                <span style={{
+                  padding: '4px 8px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
                   fontWeight: '600',
                   background: 'rgba(51, 122, 183, 0.1)',
                   color: 'var(--info-color)'
@@ -108,7 +108,7 @@ const InstanceTable = ({ instances, onStart, onStop, onRestart, onDelete }) => {
                       </svg>
                     </button>
                   )}
-                  
+
                   {instance.status === 'active' && (
                     <button
                       onClick={() => onStop(instance.instance_id)}
@@ -121,7 +121,7 @@ const InstanceTable = ({ instances, onStart, onStop, onRestart, onDelete }) => {
                       </svg>
                     </button>
                   )}
-                  
+
                   <button
                     onClick={() => onRestart(instance.instance_id)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info-color)', padding: '4px' }}
@@ -131,7 +131,7 @@ const InstanceTable = ({ instances, onStart, onStop, onRestart, onDelete }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                   </button>
-                  
+
                   <button
                     onClick={() => onDelete(instance.instance_id, instance.name)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger-color)', padding: '4px' }}

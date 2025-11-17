@@ -78,11 +78,11 @@ const CreateInstanceModal = ({ onClose, onSuccess }) => {
         </div>
 
         {error && (
-          <div style={{ 
-            background: 'rgba(166, 61, 42, 0.2)', 
-            border: '1px solid var(--danger-color)', 
-            color: 'var(--danger-color)', 
-            padding: '12px 16px', 
+          <div style={{
+            background: 'rgba(166, 61, 42, 0.2)',
+            border: '1px solid var(--danger-color)',
+            color: 'var(--danger-color)',
+            padding: '12px 16px',
             borderRadius: '8px',
             margin: '0 30px 20px 30px'
           }}>
