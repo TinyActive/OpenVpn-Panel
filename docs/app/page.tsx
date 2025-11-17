@@ -350,6 +350,123 @@ export default function Home() {
                             </div>
                         </div>
 
+                        {/* White-Label System */}
+                        <div>
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                <Server className="h-5 w-5 text-primary" />
+                                White-Label System
+                            </h3>
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <Link href="/white-label/introduction" className="group">
+                                    <Card className="h-full border-2 hover:border-primary transition-all hover:shadow-lg">
+                                        <CardHeader>
+                                            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mb-4">
+                                                <BookOpen className="h-6 w-6 text-white" />
+                                            </div>
+                                            <CardTitle className="group-hover:text-primary transition-colors">
+                                                Giới thiệu
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <CardDescription>
+                                                Tổng quan về hệ thống White-Label và kiến trúc
+                                            </CardDescription>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+
+                                <Link href="/white-label/installation" className="group">
+                                    <Card className="h-full border-2 hover:border-primary transition-all hover:shadow-lg">
+                                        <CardHeader>
+                                            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-4">
+                                                <Download className="h-6 w-6 text-white" />
+                                            </div>
+                                            <CardTitle className="group-hover:text-primary transition-colors">
+                                                Cài đặt Super Admin
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <CardDescription>
+                                                Hướng dẫn cài đặt Super Admin Panel
+                                            </CardDescription>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+
+                                <Link href="/white-label/instance-management" className="group">
+                                    <Card className="h-full border-2 hover:border-primary transition-all hover:shadow-lg">
+                                        <CardHeader>
+                                            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center mb-4">
+                                                <Server className="h-6 w-6 text-white" />
+                                            </div>
+                                            <CardTitle className="group-hover:text-primary transition-colors">
+                                                Quản lý Instances
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <CardDescription>
+                                                Tạo và quản lý White-Label instances
+                                            </CardDescription>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+
+                                <Link href="/white-label/cli-management" className="group">
+                                    <Card className="h-full border-2 hover:border-primary transition-all hover:shadow-lg">
+                                        <CardHeader>
+                                            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-4">
+                                                <Settings className="h-6 w-6 text-white" />
+                                            </div>
+                                            <CardTitle className="group-hover:text-primary transition-colors">
+                                                Quản lý CLI
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <CardDescription>
+                                                Sử dụng CLI tool để quản lý nhanh
+                                            </CardDescription>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+
+                                <Link href="/white-label/systemd-services" className="group">
+                                    <Card className="h-full border-2 hover:border-primary transition-all hover:shadow-lg">
+                                        <CardHeader>
+                                            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mb-4">
+                                                <Activity className="h-6 w-6 text-white" />
+                                            </div>
+                                            <CardTitle className="group-hover:text-primary transition-colors">
+                                                Systemd Services
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <CardDescription>
+                                                Quản lý services và monitoring
+                                            </CardDescription>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+
+                                <Link href="/white-label/troubleshooting" className="group">
+                                    <Card className="h-full border-2 hover:border-primary transition-all hover:shadow-lg">
+                                        <CardHeader>
+                                            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center mb-4">
+                                                <Shield className="h-6 w-6 text-white" />
+                                            </div>
+                                            <CardTitle className="group-hover:text-primary transition-colors">
+                                                Xử lý sự cố
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <CardDescription>
+                                                Giải quyết vấn đề và best practices
+                                            </CardDescription>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            </div>
+                        </div>
+
                         {/* Advanced Configuration */}
                         <div>
                             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
@@ -409,7 +526,12 @@ export default function Home() {
                             <ul className="space-y-2 text-sm">
                                 <li>
                                     <Link href="/installation" className="text-muted-foreground hover:text-primary transition-colors">
-                                        Cài đặt
+                                        Cài đặt Panel
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/white-label/introduction" className="text-muted-foreground hover:text-primary transition-colors">
+                                        White-Label System
                                     </Link>
                                 </li>
                                 <li>

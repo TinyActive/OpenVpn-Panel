@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from "next/image";
-import { BookOpen, Users, Server, Settings, Download, Github, Menu, FileCode, AlertCircle, Cloud } from "lucide-react";
+import { BookOpen, Users, Server, Settings, Download, Github, Menu, FileCode, AlertCircle, Cloud, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navigation = [
@@ -24,6 +24,17 @@ const navigation = [
             { title: "Cài đặt Node", href: "/node-installation", icon: Download },
             { title: "API Reference", href: "/node-api", icon: FileCode },
             { title: "Xử lý sự cố", href: "/node-troubleshooting", icon: AlertCircle },
+        ],
+    },
+    {
+        title: "White-Label System",
+        items: [
+            { title: "Giới thiệu", href: "/white-label/introduction", icon: BookOpen },
+            { title: "Cài đặt Super Admin", href: "/white-label/installation", icon: Download },
+            { title: "Quản lý Instances", href: "/white-label/instance-management", icon: Server },
+            { title: "Quản lý CLI", href: "/white-label/cli-management", icon: Terminal },
+            { title: "Systemd Services", href: "/white-label/systemd-services", icon: Settings },
+            { title: "Xử lý sự cố", href: "/white-label/troubleshooting", icon: AlertCircle },
         ],
     },
     {

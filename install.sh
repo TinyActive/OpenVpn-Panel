@@ -64,7 +64,7 @@ show_welcome_banner() {
     
     echo -e "${GREEN}• ${BOLD}Version:${NC} ${BLUE}$version${NC}"
     echo -e "${GREEN}• ${BOLD}Server IP:${NC} ${BLUE}$server_ip${NC}"
-    echo -e "${GREEN}• ${BOLD}Telegram Channel:${NC} ${BLUE}@OVPanel${NC}"
+    echo -e "${GREEN}• ${BOLD}Telegram contact:${NC} ${BLUE}@vouuvhb${NC}"
     echo
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo
