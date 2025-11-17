@@ -11,7 +11,7 @@ export default function InstanceManagementPage() {
         <DocLayout>
             <div className="flex items-center gap-3 mb-6">
                 <h1 className="!mb-0">Quản lý White-Label Instances</h1>
-                <Badge variant="primary">Management</Badge>
+                <Badge variant="info">Management</Badge>
             </div>
 
             <p className="lead">
