@@ -73,15 +73,15 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
 
     try {
       setInstallProgress('Installing node... This may take 5-10 minutes.');
-      
+
       const response = await apiClient.post('/node/auto-install', payload);
-      
+
       if (response.data.success) {
         const result = response.data.data;
         const syncInfo = result?.sync_info;
-        
+
         let message = response.data.msg || 'Node installed successfully.';
-        
+
         if (syncInfo) {
           const { total_users, synced, failed } = syncInfo;
           if (total_users > 0) {
@@ -94,11 +94,11 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
             message += '\nℹ No users to sync.';
           }
         }
-        
+
         if (result?.installation_details?.steps) {
           message += '\n\nInstallation steps:\n' + result.installation_details.steps.join('\n');
         }
-        
+
         alert(message);
         onNodeCreated();
       } else {
@@ -122,7 +122,7 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
           <button onClick={onClose} className="close-modal-btn" disabled={isLoading}>&times;</button>
         </div>
         <form onSubmit={handleSubmit}>
-          
+
           {/* Node Basic Info */}
           <div style={{ marginBottom: '20px' }}>
             <h4 style={{ borderBottom: '2px solid var(--primary-color)', paddingBottom: '8px' }}>
@@ -130,13 +130,13 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
             </h4>
             <div className="input-group">
               <label htmlFor="name">{t('nodeName')}</label>
-              <input 
-                type="text" 
-                id="name" 
-                name="name" 
-                value={formData.name} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
                 maxLength="10"
                 placeholder="e.g., Node-US-1"
               />
@@ -150,48 +150,48 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
             </h4>
             <div className="input-group">
               <label htmlFor="ssh_host">Server IP or Hostname *</label>
-              <input 
-                type="text" 
-                id="ssh_host" 
-                name="ssh_host" 
-                value={formData.ssh_host} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="text"
+                id="ssh_host"
+                name="ssh_host"
+                value={formData.ssh_host}
+                onChange={handleChange}
+                required
                 placeholder="e.g., 192.168.1.100 or node1.example.com"
               />
             </div>
             <div className="input-group">
               <label htmlFor="ssh_port">SSH Port</label>
-              <input 
-                type="number" 
-                id="ssh_port" 
-                name="ssh_port" 
-                value={formData.ssh_port} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="number"
+                id="ssh_port"
+                name="ssh_port"
+                value={formData.ssh_port}
+                onChange={handleChange}
+                required
                 placeholder="22"
               />
             </div>
             <div className="input-group">
               <label htmlFor="ssh_username">SSH Username</label>
-              <input 
-                type="text" 
-                id="ssh_username" 
-                name="ssh_username" 
-                value={formData.ssh_username} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="text"
+                id="ssh_username"
+                name="ssh_username"
+                value={formData.ssh_username}
+                onChange={handleChange}
+                required
                 placeholder="root"
               />
             </div>
-            
+
             <div className="input-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
-              <input 
-                type="checkbox" 
-                id="use_ssh_key" 
-                name="use_ssh_key" 
-                checked={formData.use_ssh_key} 
-                onChange={handleChange} 
+              <input
+                type="checkbox"
+                id="use_ssh_key"
+                name="use_ssh_key"
+                checked={formData.use_ssh_key}
+                onChange={handleChange}
               />
               <label htmlFor="use_ssh_key" style={{ marginBottom: 0 }}>Use SSH Key (instead of password)</label>
             </div>
@@ -199,12 +199,12 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
             {!formData.use_ssh_key ? (
               <div className="input-group">
                 <label htmlFor="ssh_password">SSH Password *</label>
-                <input 
-                  type="password" 
-                  id="ssh_password" 
-                  name="ssh_password" 
-                  value={formData.ssh_password} 
-                  onChange={handleChange} 
+                <input
+                  type="password"
+                  id="ssh_password"
+                  name="ssh_password"
+                  value={formData.ssh_password}
+                  onChange={handleChange}
                   required={!formData.use_ssh_key}
                   placeholder="Enter SSH password"
                 />
@@ -212,11 +212,11 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
             ) : (
               <div className="input-group">
                 <label htmlFor="ssh_key_content">SSH Private Key *</label>
-                <textarea 
-                  id="ssh_key_content" 
-                  name="ssh_key_content" 
-                  value={formData.ssh_key_content} 
-                  onChange={handleChange} 
+                <textarea
+                  id="ssh_key_content"
+                  name="ssh_key_content"
+                  value={formData.ssh_key_content}
+                  onChange={handleChange}
                   required={formData.use_ssh_key}
                   rows="4"
                   placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
@@ -233,71 +233,71 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
             </h4>
             <div className="input-group">
               <label htmlFor="r2_access_key_id">R2 Access Key ID *</label>
-              <input 
-                type="text" 
-                id="r2_access_key_id" 
-                name="r2_access_key_id" 
-                value={formData.r2_access_key_id} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="text"
+                id="r2_access_key_id"
+                name="r2_access_key_id"
+                value={formData.r2_access_key_id}
+                onChange={handleChange}
+                required
                 placeholder="Your R2 Access Key ID"
               />
             </div>
             <div className="input-group">
               <label htmlFor="r2_secret_access_key">R2 Secret Access Key *</label>
-              <input 
-                type="password" 
-                id="r2_secret_access_key" 
-                name="r2_secret_access_key" 
-                value={formData.r2_secret_access_key} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="password"
+                id="r2_secret_access_key"
+                name="r2_secret_access_key"
+                value={formData.r2_secret_access_key}
+                onChange={handleChange}
+                required
                 placeholder="Your R2 Secret Access Key"
               />
             </div>
             <div className="input-group">
               <label htmlFor="r2_bucket_name">R2 Bucket Name *</label>
-              <input 
-                type="text" 
-                id="r2_bucket_name" 
-                name="r2_bucket_name" 
-                value={formData.r2_bucket_name} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="text"
+                id="r2_bucket_name"
+                name="r2_bucket_name"
+                value={formData.r2_bucket_name}
+                onChange={handleChange}
+                required
                 placeholder="your-bucket-name"
               />
             </div>
             <div className="input-group">
               <label htmlFor="r2_account_id">R2 Account ID *</label>
-              <input 
-                type="text" 
-                id="r2_account_id" 
-                name="r2_account_id" 
-                value={formData.r2_account_id} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="text"
+                id="r2_account_id"
+                name="r2_account_id"
+                value={formData.r2_account_id}
+                onChange={handleChange}
+                required
                 placeholder="Your Cloudflare Account ID"
               />
             </div>
             <div className="input-group">
               <label htmlFor="r2_public_base_url">R2 Public Base URL</label>
-              <input 
-                type="text" 
-                id="r2_public_base_url" 
-                name="r2_public_base_url" 
-                value={formData.r2_public_base_url} 
-                onChange={handleChange} 
+              <input
+                type="text"
+                id="r2_public_base_url"
+                name="r2_public_base_url"
+                value={formData.r2_public_base_url}
+                onChange={handleChange}
                 placeholder="api.openvpn.panel"
               />
             </div>
             <div className="input-group">
               <label htmlFor="r2_download_token">R2 Download Token</label>
-              <input 
-                type="text" 
-                id="r2_download_token" 
-                name="r2_download_token" 
-                value={formData.r2_download_token} 
-                onChange={handleChange} 
+              <input
+                type="text"
+                id="r2_download_token"
+                name="r2_download_token"
+                value={formData.r2_download_token}
+                onChange={handleChange}
                 placeholder="8638b5a1-77df-4d24-8253-58977fa508a4"
               />
             </div>
@@ -317,25 +317,25 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
             </div>
             <div className="input-group">
               <label htmlFor="ovpn_port">{t('ovpnPort')}</label>
-              <input 
-                type="number" 
-                id="ovpn_port" 
-                name="ovpn_port" 
-                value={formData.ovpn_port} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="number"
+                id="ovpn_port"
+                name="ovpn_port"
+                value={formData.ovpn_port}
+                onChange={handleChange}
+                required
                 placeholder="1194"
               />
             </div>
             <div className="input-group">
               <label htmlFor="node_port">OV-Node Service Port</label>
-              <input 
-                type="number" 
-                id="node_port" 
-                name="node_port" 
-                value={formData.node_port} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="number"
+                id="node_port"
+                name="node_port"
+                value={formData.node_port}
+                onChange={handleChange}
+                required
                 placeholder="9090"
               />
             </div>
@@ -346,32 +346,32 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
                   ({t('optional', 'Optional')})
                 </span>
               </label>
-              <input 
-                type="text" 
-                id="tunnel_address" 
-                name="tunnel_address" 
-                value={formData.tunnel_address} 
-                onChange={handleChange} 
+              <input
+                type="text"
+                id="tunnel_address"
+                name="tunnel_address"
+                value={formData.tunnel_address}
+                onChange={handleChange}
                 placeholder="Optional custom domain"
               />
             </div>
             <div className="input-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
-              <input 
-                type="checkbox" 
-                id="status" 
-                name="status" 
-                checked={formData.status} 
-                onChange={handleChange} 
+              <input
+                type="checkbox"
+                id="status"
+                name="status"
+                checked={formData.status}
+                onChange={handleChange}
               />
               <label htmlFor="status" style={{ marginBottom: 0 }}>{t('status_active')}</label>
             </div>
           </div>
 
           {installProgress && (
-            <div style={{ 
-              padding: '12px', 
-              background: 'var(--bg-secondary)', 
-              borderRadius: '6px', 
+            <div style={{
+              padding: '12px',
+              background: 'var(--bg-secondary)',
+              borderRadius: '6px',
               marginBottom: '16px',
               color: 'var(--primary-color)'
             }}>
@@ -381,7 +381,7 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
               </p>
             </div>
           )}
-          
+
           <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
               {t('cancelButton')}
