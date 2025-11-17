@@ -401,7 +401,7 @@ lsof -i :9001
 
                 <Alert variant="tip">
                     <AlertDescription>
-                        <strong>Security:</strong> Sử dụng mật khẩu mạnh (>12 ký tự, kết hợp chữ, số, ký tự đặc biệt)
+                        <strong>Security:</strong> Sử dụng mật khẩu mạnh (&gt;12 ký tự, kết hợp chữ, số, ký tự đặc biệt)
                         cho mỗi instance admin.
                     </AlertDescription>
                 </Alert>
