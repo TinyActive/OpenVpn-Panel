@@ -412,36 +412,5 @@ async def initialize_whitelabel_system(
         )
 
 
-@router.post("/recreate-template", response_model=ResponseModel)
-async def recreate_template_database(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
-    """
-    Recreate the template database with latest migrations.
-    Useful after adding new migrations.
-    
-    Only available on Super Admin Panel.
-    """
-    check_super_admin()
-    
-    try:
-        if WhiteLabelManager.create_template_database():
-            return ResponseModel(
-                success=True,
-                msg="Template database recreated successfully",
-                data=None
-            )
-        else:
-            return ResponseModel(
-                success=False,
-                msg="Failed to recreate template database",
-                data=None
-            )
-    except Exception as e:
-        logger.error(f"Error recreating template database: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
+
 

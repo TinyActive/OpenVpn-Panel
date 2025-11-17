@@ -27,8 +27,13 @@ class WhiteLabelManager:
     
     BASE_PATH = Path("/opt/ov-panel-instances")
     SHARED_CODE_PATH = BASE_PATH / "shared"
-    TEMPLATE_DB_PATH = BASE_PATH / "template" / "ov-panel.db"
     SOURCE_CODE_PATH = None  # Will be set dynamically
+    
+    @staticmethod
+    def _get_sample_db_path() -> Path:
+        """Get the path to the sample database file."""
+        source_code_path = WhiteLabelManager._get_source_code_path()
+        return source_code_path / "data" / "ov-panel-sample.db"
     
     @staticmethod
     def _get_source_code_path() -> Path:
@@ -62,86 +67,7 @@ class WhiteLabelManager:
         
         return WhiteLabelManager.SOURCE_CODE_PATH
     
-    @staticmethod
-    def create_template_database() -> bool:
-        """
-        Create a template database with all tables migrated and default data seeded.
-        This template will be copied for each new instance.
-        
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            template_dir = WhiteLabelManager.TEMPLATE_DB_PATH.parent
-            template_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Remove old template if exists
-            if WhiteLabelManager.TEMPLATE_DB_PATH.exists():
-                WhiteLabelManager.TEMPLATE_DB_PATH.unlink()
-            
-            source_code_path = WhiteLabelManager._get_source_code_path()
-            backend_dir = source_code_path / "backend"
-            venv_bin = source_code_path / "venv" / "bin"
-            
-            # Create a temporary instance ID for template
-            template_instance_id = "template"
-            
-            # Set environment variables to point to template database
-            import os
-            env = os.environ.copy()
-            env["INSTANCE_ID"] = template_instance_id
-            env["PATH"] = f"{venv_bin}:/usr/local/bin:/usr/bin:/bin"
-            
-            # Run alembic to create template database
-            venv_alembic = venv_bin / "alembic"
-            result = subprocess.run(
-                [str(venv_alembic), "upgrade", "head"],
-                cwd=str(backend_dir),
-                env=env,
-                check=True,
-                capture_output=True,
-                text=True
-            )
-            
-            # Seed default settings data
-            from sqlalchemy import create_engine
-            from sqlalchemy.orm import sessionmaker
-            from backend.db.models import Settings
-            
-            db_url = f"sqlite:///{WhiteLabelManager.TEMPLATE_DB_PATH}"
-            engine = create_engine(db_url, connect_args={"check_same_thread": False})
-            SessionLocal = sessionmaker(bind=engine, autoflush=False)
-            db = SessionLocal()
-            
-            try:
-                # Check if settings already exists
-                existing_settings = db.query(Settings).first()
-                if not existing_settings:
-                    # Create default settings
-                    default_settings = Settings(
-                        port=1194,
-                        protocol="tcp",
-                        tunnel_address=None
-                    )
-                    db.add(default_settings)
-                    db.commit()
-                    logger.info("Default settings seeded to template database")
-            finally:
-                db.close()
-            
-            logger.info("Template database created successfully")
-            if result.stdout:
-                logger.debug(f"Template DB creation output: {result.stdout}")
-            
-            return True
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to create template database: {e}")
-            if e.stderr:
-                logger.error(f"Template DB error: {e.stderr}")
-            return False
-        except Exception as e:
-            logger.error(f"Failed to create template database: {e}")
-            return False
+
     
     @staticmethod
     def initialize_shared_directory() -> bool:
@@ -178,10 +104,11 @@ class WhiteLabelManager:
                 
                 logger.info("Shared directory initialized successfully")
             
-            # Create template database if it doesn't exist
-            if not WhiteLabelManager.TEMPLATE_DB_PATH.exists():
-                logger.info("Creating template database...")
-                WhiteLabelManager.create_template_database()
+            # Verify sample database exists
+            sample_db_path = WhiteLabelManager._get_sample_db_path()
+            if not sample_db_path.exists():
+                logger.error(f"Sample database not found at {sample_db_path}")
+                raise FileNotFoundError(f"Sample database file not found: {sample_db_path}")
             
             return True
         except Exception as e:
@@ -286,15 +213,16 @@ class WhiteLabelManager:
             db.commit()
             db.refresh(instance)
             
-            # Copy template database instead of running migrations
+            # Copy sample database to instance
             instance_db_path = data_dir / "ov-panel.db"
-            if WhiteLabelManager.TEMPLATE_DB_PATH.exists():
-                shutil.copy2(WhiteLabelManager.TEMPLATE_DB_PATH, instance_db_path)
-                logger.info(f"Copied template database to instance {instance_id}")
-            else:
-                # Fallback: run migrations if template doesn't exist
-                logger.warning("Template database not found, running migrations...")
-                WhiteLabelManager._run_instance_migrations(instance_id)
+            sample_db_path = WhiteLabelManager._get_sample_db_path()
+            
+            if not sample_db_path.exists():
+                logger.error(f"Sample database not found at {sample_db_path}")
+                raise FileNotFoundError(f"Sample database file required: {sample_db_path}")
+            
+            shutil.copy2(sample_db_path, instance_db_path)
+            logger.info(f"Copied sample database from {sample_db_path} to instance {instance_id}")
             
             logger.info(f"Instance {instance_id} ({name}) created successfully")
             return instance
@@ -304,63 +232,7 @@ class WhiteLabelManager:
             db.rollback()
             return None
     
-    @staticmethod
-    def _run_instance_migrations(instance_id: str) -> bool:
-        """
-        Run database migrations for an instance.
-        
-        Args:
-            instance_id: Instance identifier
-        
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            instance_dir = WhiteLabelManager.BASE_PATH / f"instance-{instance_id}"
-            source_code_path = WhiteLabelManager._get_source_code_path()
-            backend_dir = source_code_path / "backend"
-            venv_bin = source_code_path / "venv" / "bin"
-            
-            # Load instance .env file and set environment variables
-            import os
-            env = os.environ.copy()
-            env_file = instance_dir / f".env.{instance_id}"
-            
-            if env_file.exists():
-                with open(env_file, 'r') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line and not line.startswith('#') and '=' in line:
-                            key, value = line.split('=', 1)
-                            env[key.strip()] = value.strip()
-            
-            # Ensure INSTANCE_ID is set
-            env["INSTANCE_ID"] = instance_id
-            env["PATH"] = f"{venv_bin}:/usr/local/bin:/usr/bin:/bin"
-            
-            # Run alembic upgrade
-            venv_alembic = venv_bin / "alembic"
-            result = subprocess.run(
-                [str(venv_alembic), "upgrade", "head"],
-                cwd=str(backend_dir),
-                env=env,
-                check=True,
-                capture_output=True,
-                text=True
-            )
-            
-            logger.info(f"Database migrations completed for instance {instance_id}")
-            if result.stdout:
-                logger.debug(f"Migration output: {result.stdout}")
-            return True
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to run migrations for instance {instance_id}: {e}")
-            if e.stderr:
-                logger.error(f"Migration error: {e.stderr}")
-            return False
-        except Exception as e:
-            logger.error(f"Failed to run migrations for instance {instance_id}: {e}")
-            return False
+
     
     @staticmethod
     def start_instance(db: Session, instance_id: str) -> bool:

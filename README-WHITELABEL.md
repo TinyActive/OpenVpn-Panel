@@ -26,14 +26,15 @@ Hệ thống White-Label cho phép bạn tạo và quản lý nhiều instances 
 ├── backend/
 ├── frontend/
 ├── data/
-│   └── ov-panel.db              # Super admin database
+│   ├── ov-panel.db              # Super admin database
+│   └── ov-panel-sample.db       # Sample database template cho instances
 ├── .env                          # Super admin config (IS_SUPER_ADMIN=True)
 └── main.py
 
 /opt/ov-panel-instances/          # White-label instances
 ├── instance-{uuid}/
 │   ├── data/
-│   │   └── ov-panel.db          # Instance database
+│   │   └── ov-panel.db          # Instance database (copied từ sample)
 │   ├── .env.{uuid}              # Instance config
 │   └── logs/
 │       ├── output.log
@@ -43,6 +44,20 @@ Hệ thống White-Label cho phép bạn tạo và quản lý nhiều instances 
     ├── frontend/ -> /opt/ov-panel/frontend/
     └── main.py -> /opt/ov-panel/main.py
 ```
+
+## Database Management
+
+### Sample Database (`ov-panel-sample.db`)
+
+Hệ thống sử dụng một file database mẫu (`data/ov-panel-sample.db`) làm template cho tất cả các whitelabel instances. Khi tạo instance mới:
+- **KHÔNG chạy database migration** - Giúp tạo instance nhanh hơn và nhất quán
+- **Copy file `ov-panel-sample.db`** vào thư mục `data/` của instance
+- File sample database đã được migrate đầy đủ và chứa cấu trúc bảng chuẩn
+
+**Lưu ý quan trọng:**
+- File `ov-panel-sample.db` phải tồn tại trong thư mục `data/` của main panel
+- Nếu bạn cập nhật schema database, cần cập nhật lại file sample này
+- Tất cả instances sẽ sử dụng cùng một schema từ file sample
 
 ## Cài đặt
 
