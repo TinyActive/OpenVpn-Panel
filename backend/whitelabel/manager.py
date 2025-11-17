@@ -7,6 +7,8 @@ Handles creation, deletion, and management of white-label instances.
 import uuid
 import shutil
 import subprocess
+import requests
+import os
 from pathlib import Path
 from typing import Optional, Dict, List
 from datetime import datetime
@@ -141,7 +143,6 @@ class WhiteLabelManager:
         admin_username: str,
         admin_password: str,
         port: int,
-        has_openvpn: bool = False,
     ) -> Optional[WhiteLabelInstance]:
         """
         Create a new white-label instance.
@@ -152,7 +153,6 @@ class WhiteLabelManager:
             admin_username: Admin username for the instance
             admin_password: Admin password (plain text)
             port: Port number for the instance
-            has_openvpn: Whether to install OpenVPN for this instance
         
         Returns:
             Created WhiteLabelInstance or None if failed
@@ -183,7 +183,7 @@ class WhiteLabelManager:
                 admin_username=admin_username,
                 admin_password=admin_password,
                 port=port,
-                has_openvpn=has_openvpn,
+                has_openvpn=False,  # Always False for white-label instances
             )
             
             # Create .env file
@@ -204,7 +204,7 @@ class WhiteLabelManager:
                 admin_password_hash=password_hash,
                 jwt_secret=config["JWT_SECRET_KEY"],
                 api_key=config["API_KEY"],
-                has_openvpn=has_openvpn,
+                has_openvpn=False,  # Always False
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
             )
@@ -296,9 +296,119 @@ class WhiteLabelManager:
             return False
     
     @staticmethod
+    def cleanup_instance_users_via_api(instance: WhiteLabelInstance) -> dict:
+        """
+        Cleanup all users of an instance by calling the instance's API.
+        The instance will handle deleting users from all nodes.
+        
+        Args:
+            instance: WhiteLabelInstance object with port and api_key
+        
+        Returns:
+            Dictionary with cleanup statistics
+        """
+        logger.info(f"=== Starting cleanup users for instance {instance.instance_id} via API ===")
+        
+        try:
+            # Check if instance is running
+            instance_status = SystemdServiceManager.get_instance_status(instance.instance_id)
+            logger.info(f"Instance status: {instance_status}")
+            
+            # If instance is not running, try to start it temporarily for cleanup
+            was_stopped = False
+            if instance_status != "active":
+                logger.info(f"Instance is not running, starting temporarily for cleanup")
+                if not SystemdServiceManager.start_instance(instance.instance_id):
+                    logger.error(f"Failed to start instance for cleanup")
+                    return {"success": False, "error": "Cannot start instance for cleanup"}
+                was_stopped = True
+                # Wait a bit for instance to start
+                import time
+                time.sleep(3)
+            
+            # Get all users from instance via API
+            api_url = f"http://localhost:{instance.port}/api/user/all"
+            headers = {"key": instance.api_key}
+            
+            logger.info(f"Fetching users from instance API: {api_url}")
+            
+            try:
+                response = requests.get(api_url, headers=headers, timeout=10)
+                response.raise_for_status()
+                
+                data = response.json()
+                if not data.get("success"):
+                    logger.error(f"API returned error: {data.get('msg')}")
+                    return {"success": False, "error": data.get('msg')}
+                
+                users = data.get("data", [])
+                logger.info(f"Found {len(users)} users in instance: {[u.get('name') for u in users]}")
+                
+                if not users:
+                    logger.info("No users to cleanup")
+                    if was_stopped:
+                        SystemdServiceManager.stop_instance(instance.instance_id)
+                    return {"success": True, "users_found": 0, "deleted": 0, "failed": 0}
+                
+                # Delete each user via instance API
+                deleted_count = 0
+                failed_count = 0
+                
+                for user in users:
+                    user_name = user.get("name")
+                    if not user_name:
+                        continue
+                    
+                    logger.info(f"Deleting user '{user_name}' via instance API")
+                    
+                    try:
+                        delete_url = f"http://localhost:{instance.port}/api/user/delete/{user_name}"
+                        delete_response = requests.delete(delete_url, headers=headers, timeout=30)
+                        delete_response.raise_for_status()
+                        
+                        delete_data = delete_response.json()
+                        if delete_data.get("success"):
+                            deleted_count += 1
+                            logger.info(f"✓ Successfully deleted user '{user_name}'")
+                        else:
+                            failed_count += 1
+                            logger.warning(f"✗ Failed to delete user '{user_name}': {delete_data.get('msg')}")
+                    
+                    except Exception as e:
+                        failed_count += 1
+                        logger.error(f"✗ Exception deleting user '{user_name}': {e}")
+                
+                # Stop instance if it was stopped before
+                if was_stopped:
+                    logger.info("Stopping instance after cleanup")
+                    SystemdServiceManager.stop_instance(instance.instance_id)
+                
+                result = {
+                    "success": True,
+                    "users_found": len(users),
+                    "deleted": deleted_count,
+                    "failed": failed_count
+                }
+                logger.info(f"=== Cleanup completed: {result} ===")
+                return result
+            
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Failed to connect to instance API: {e}")
+                if was_stopped:
+                    SystemdServiceManager.stop_instance(instance.instance_id)
+                return {"success": False, "error": f"API connection failed: {str(e)}"}
+        
+        except Exception as e:
+            logger.error(f"!!! CRITICAL: Failed to cleanup users for instance {instance.instance_id}: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return {"success": False, "error": str(e)}
+    
+    @staticmethod
     def delete_instance(db: Session, instance_id: str) -> bool:
         """
         Delete a white-label instance.
+        Cleans up all users via instance API before deletion.
         
         Args:
             db: Database session
@@ -315,6 +425,11 @@ class WhiteLabelManager:
             if not instance:
                 logger.error(f"Instance {instance_id} not found")
                 return False
+            
+            # First, cleanup all users via instance API
+            logger.info(f"Starting cleanup of users for instance {instance_id} via API")
+            cleanup_result = WhiteLabelManager.cleanup_instance_users_via_api(instance)
+            logger.info(f"Cleanup result: {cleanup_result}")
             
             # Stop and remove systemd service
             SystemdServiceManager.remove_instance_service(instance_id)
@@ -387,6 +502,65 @@ class WhiteLabelManager:
         return db.query(WhiteLabelInstance).filter(
             WhiteLabelInstance.instance_id == instance_id
         ).first()
+    
+    @staticmethod
+    def get_instance_user_and_node_count(instance: WhiteLabelInstance) -> Dict[str, int]:
+        """
+        Get user and node count for an instance by calling its API.
+        
+        Args:
+            instance: WhiteLabelInstance object
+        
+        Returns:
+            Dictionary with user_count and node_count
+        """
+        try:
+            # Check if instance is running
+            instance_status = SystemdServiceManager.get_instance_status(instance.instance_id)
+            
+            if instance_status != "active":
+                # Return 0 if instance is not running
+                return {"user_count": 0, "node_count": 0}
+            
+            headers = {"key": instance.api_key}
+            
+            # Get user count
+            user_count = 0
+            try:
+                user_response = requests.get(
+                    f"http://localhost:{instance.port}/api/user/all",
+                    headers=headers,
+                    timeout=5
+                )
+                if user_response.status_code == 200:
+                    user_data = user_response.json()
+                    if user_data.get("success"):
+                        users = user_data.get("data", [])
+                        user_count = len(users) if isinstance(users, list) else 0
+            except Exception as e:
+                logger.warning(f"Failed to get user count for instance {instance.instance_id}: {e}")
+            
+            # Get node count
+            node_count = 0
+            try:
+                node_response = requests.get(
+                    f"http://localhost:{instance.port}/api/node/all",
+                    headers=headers,
+                    timeout=5
+                )
+                if node_response.status_code == 200:
+                    node_data = node_response.json()
+                    if node_data.get("success"):
+                        nodes = node_data.get("data", [])
+                        node_count = len(nodes) if isinstance(nodes, list) else 0
+            except Exception as e:
+                logger.warning(f"Failed to get node count for instance {instance.instance_id}: {e}")
+            
+            return {"user_count": user_count, "node_count": node_count}
+        
+        except Exception as e:
+            logger.error(f"Failed to get stats for instance {instance.instance_id}: {e}")
+            return {"user_count": 0, "node_count": 0}
     
     @staticmethod
     def list_instances(db: Session) -> List[WhiteLabelInstance]:

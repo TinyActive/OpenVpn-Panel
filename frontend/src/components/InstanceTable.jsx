@@ -37,7 +37,8 @@ const InstanceTable = ({ instances, onStart, onStop, onRestart, onDelete }) => {
             <th>Port</th>
             <th>Status</th>
             <th>Admin Username</th>
-            <th>OpenVPN</th>
+            <th>Users</th>
+            <th>Nodes</th>
             <th>Created</th>
             <th style={{ textAlign: 'right' }}>Actions</th>
           </tr>
@@ -67,11 +68,28 @@ const InstanceTable = ({ instances, onStart, onStop, onRestart, onDelete }) => {
               </td>
               <td>{instance.admin_username}</td>
               <td>
-                {instance.has_openvpn ? (
-                  <span style={{ color: 'var(--success-color)' }}>✓ Yes</span>
-                ) : (
-                  <span style={{ color: 'var(--text-secondary)' }}>✗ No</span>
-                )}
+                <span style={{ 
+                  padding: '4px 8px', 
+                  borderRadius: '8px', 
+                  fontSize: '12px', 
+                  fontWeight: '600',
+                  background: 'rgba(1, 195, 168, 0.1)',
+                  color: 'var(--success-color)'
+                }}>
+                  {instance.user_count !== undefined ? instance.user_count : '-'}
+                </span>
+              </td>
+              <td>
+                <span style={{ 
+                  padding: '4px 8px', 
+                  borderRadius: '8px', 
+                  fontSize: '12px', 
+                  fontWeight: '600',
+                  background: 'rgba(51, 122, 183, 0.1)',
+                  color: 'var(--info-color)'
+                }}>
+                  {instance.node_count !== undefined ? instance.node_count : '-'}
+                </span>
               </td>
               <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
                 {formatDate(instance.created_at)}

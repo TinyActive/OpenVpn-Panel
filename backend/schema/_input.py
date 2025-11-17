@@ -38,7 +38,6 @@ class WhiteLabelInstanceCreate(BaseModel):
     admin_username: str = Field(min_length=3, max_length=50)
     admin_password: str = Field(min_length=6)
     port: int = Field(ge=1024, le=65535)
-    has_openvpn: bool = Field(default=False)
 
 
 class WhiteLabelInstanceUpdate(BaseModel):

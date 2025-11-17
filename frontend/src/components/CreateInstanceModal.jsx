@@ -7,7 +7,6 @@ const CreateInstanceModal = ({ onClose, onSuccess }) => {
     admin_username: '',
     admin_password: '',
     port: '',
-    has_openvpn: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,7 +47,6 @@ const CreateInstanceModal = ({ onClose, onSuccess }) => {
         admin_username: formData.admin_username,
         admin_password: formData.admin_password,
         port: port,
-        has_openvpn: formData.has_openvpn,
       });
 
       if (response.data.success) {
@@ -142,19 +140,6 @@ const CreateInstanceModal = ({ onClose, onSuccess }) => {
               min={1024}
               max={65535}
             />
-          </div>
-
-          <div className="input-group" style={{ display: 'flex', alignItems: 'center', marginBottom: '0' }}>
-            <input
-              type="checkbox"
-              name="has_openvpn"
-              checked={formData.has_openvpn}
-              onChange={handleChange}
-              style={{ width: 'auto', marginRight: '8px' }}
-            />
-            <label style={{ marginBottom: '0', cursor: 'pointer' }}>
-              Install OpenVPN for this instance
-            </label>
           </div>
 
           <div className="modal-footer">

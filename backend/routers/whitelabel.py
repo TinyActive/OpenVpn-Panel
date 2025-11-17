@@ -64,7 +64,6 @@ async def create_instance(
             admin_username=request.admin_username,
             admin_password=request.admin_password,
             port=request.port,
-            has_openvpn=request.has_openvpn,
         )
         
         if instance:
@@ -98,7 +97,7 @@ async def list_instances(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    List all white-label instances.
+    List all white-label instances with user and node counts.
     
     Only available on Super Admin Panel.
     """
@@ -106,7 +105,29 @@ async def list_instances(
     
     try:
         instances = WhiteLabelManager.list_instances(db)
-        return instances
+        
+        # Add user and node counts to each instance
+        result = []
+        for instance in instances:
+            instance_dict = {
+                "id": instance.id,
+                "instance_id": instance.instance_id,
+                "name": instance.name,
+                "port": instance.port,
+                "status": instance.status,
+                "admin_username": instance.admin_username,
+                "created_at": instance.created_at,
+                "updated_at": instance.updated_at,
+            }
+            
+            # Get user and node counts
+            counts = WhiteLabelManager.get_instance_user_and_node_count(instance)
+            instance_dict["user_count"] = counts["user_count"]
+            instance_dict["node_count"] = counts["node_count"]
+            
+            result.append(instance_dict)
+        
+        return result
     except Exception as e:
         logger.error(f"Error listing instances: {e}")
         raise HTTPException(
@@ -311,6 +332,7 @@ async def get_instance_stats(
             )
         
         stats = WhiteLabelManager.get_instance_stats(instance_id)
+        counts = WhiteLabelManager.get_instance_user_and_node_count(instance)
         
         return WhiteLabelInstanceStats(
             instance_id=instance.instance_id,
@@ -320,6 +342,8 @@ async def get_instance_stats(
             systemd_status=stats.get("status") if stats else None,
             output_log_size=stats.get("output_log_size") if stats else None,
             error_log_size=stats.get("error_log_size") if stats else None,
+            user_count=counts.get("user_count", 0),
+            node_count=counts.get("node_count", 0),
         )
     except HTTPException:
         raise

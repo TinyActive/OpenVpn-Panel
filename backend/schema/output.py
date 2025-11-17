@@ -57,9 +57,11 @@ class WhiteLabelInstanceOutput(BaseModel):
     port: int
     status: str
     admin_username: str
-    has_openvpn: bool
     created_at: Any
     updated_at: Any
+    # Statistics (optional, populated separately)
+    user_count: Optional[int] = None
+    node_count: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -73,3 +75,5 @@ class WhiteLabelInstanceStats(BaseModel):
     systemd_status: Optional[str] = None
     output_log_size: Optional[int] = None
     error_log_size: Optional[int] = None
+    user_count: Optional[int] = None
+    node_count: Optional[int] = None
