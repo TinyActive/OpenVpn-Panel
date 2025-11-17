@@ -19,7 +19,6 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
     r2_account_id: '',
     r2_public_base_url: 'api.openvpn.panel',
     r2_download_token: '8638b5a1-77df-4d24-8253-58977fa508a4',
-    tunnel_address: '',
     protocol: 'tcp',
     ovpn_port: 1194,
     node_port: 9090,
@@ -66,7 +65,6 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
       protocol: formData.protocol,
       ovpn_port: Number(formData.ovpn_port),
       node_port: Number(formData.node_port),
-      tunnel_address: formData.tunnel_address || null,
       status: formData.status,
       set_new_setting: formData.set_new_setting,
     };
@@ -337,22 +335,6 @@ const AddNodeModal = ({ onClose, onNodeCreated }) => {
                 onChange={handleChange}
                 required
                 placeholder="9090"
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="tunnel_address">
-                {t('tunnelAddress')}
-                <span style={{ color: 'var(--text-secondary)', fontSize: '12px', marginLeft: '8px' }}>
-                  ({t('optional', 'Optional')})
-                </span>
-              </label>
-              <input
-                type="text"
-                id="tunnel_address"
-                name="tunnel_address"
-                value={formData.tunnel_address}
-                onChange={handleChange}
-                placeholder="Optional custom domain"
               />
             </div>
             <div className="input-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>

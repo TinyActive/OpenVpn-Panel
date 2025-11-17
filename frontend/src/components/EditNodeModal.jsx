@@ -8,7 +8,6 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
-    tunnel_address: '',
     protocol: 'tcp',
     ovpn_port: 1194,
     port: 0,
@@ -25,7 +24,6 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
       setFormData({
         name: node.name || '',
         address: node.address || '',
-        tunnel_address: node.tunnel_address || '',
         protocol: node.protocol || 'tcp',
         ovpn_port: node.ovpn_port || 1194,
         port: node.port || 0,
@@ -94,15 +92,6 @@ const EditNodeModal = ({ node, onClose, onNodeUpdated }) => {
           <div className="input-group">
             <label htmlFor="edit-port">{t('nodePort')}</label>
             <input type="number" id="edit-port" name="port" value={formData.port} onChange={handleChange} required />
-          </div>
-          <div className="input-group">
-            <label htmlFor="edit-tunnel_address">
-              {t('tunnelAddress')}
-              <span style={{ color: 'var(--text-secondary)', fontSize: '12px', marginLeft: '8px' }}>
-                ({t('optional', 'Optional')})
-              </span>
-            </label>
-            <input type="text" id="edit-tunnel_address" name="tunnel_address" value={formData.tunnel_address} onChange={handleChange} />
           </div>
 
           <div className="input-group">

@@ -111,7 +111,6 @@ def create_node(db: Session, request: NodeCreate):
     new_node = Node(
         name=request.name,
         address=request.address,
-        tunnel_address=request.tunnel_address,
         ovpn_port=request.ovpn_port,
         protocol=request.protocol,
         port=request.port,
@@ -131,7 +130,6 @@ def update_node(db: Session, address: str, request: NodeCreate):
         raise HTTPException(status_code=404, detail="Node not found")
 
     node.name = request.name
-    node.tunnel_address = request.tunnel_address
     node.ovpn_port = request.ovpn_port
     node.protocol = request.protocol
     node.port = request.port
@@ -168,7 +166,7 @@ def update_settings(db: Session, request: SettingsUpdate):
     settings = db.query(Settings).first()
 
     settings.port = request.port
-    settings.tunnel_address = request.tunnel_address
+    settings.protocol = request.protocol
     db.commit()
     db.refresh(settings)
     return settings

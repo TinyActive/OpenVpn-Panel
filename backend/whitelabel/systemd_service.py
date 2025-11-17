@@ -27,6 +27,9 @@ class SystemdServiceManager:
         Returns:
             True if successful, False otherwise
         """
+        import os
+        instances_base = os.getenv("OV_INSTANCES_DIR", "/opt/ov-panel-instances")
+        
         template_content = f"""[Unit]
 Description=OV-Panel White-Label Instance %i
 After=network.target
@@ -35,13 +38,14 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory={install_dir}
-EnvironmentFile=/opt/ov-panel-instances/instance-%i/.env.%i
+EnvironmentFile={instances_base}/instance-%i/.env.%i
 Environment="INSTANCE_ID=%i"
+Environment="OV_INSTANCES_DIR={instances_base}"
 ExecStart={venv_python} main.py
 Restart=always
 RestartSec=5
-StandardOutput=append:/opt/ov-panel-instances/instance-%i/logs/output.log
-StandardError=append:/opt/ov-panel-instances/instance-%i/logs/error.log
+StandardOutput=append:{instances_base}/instance-%i/logs/output.log
+StandardError=append:{instances_base}/instance-%i/logs/error.log
 
 [Install]
 WantedBy=multi-user.target

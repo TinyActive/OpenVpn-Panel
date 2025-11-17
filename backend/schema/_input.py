@@ -17,7 +17,6 @@ class UpdateUser(BaseModel):
 class NodeCreate(BaseModel):
     name: str = Field(max_length=10)
     address: str
-    tunnel_address: str = Field(default=None)
     protocol: str = Field(default="tcp")
     ovpn_port: int = Field(default=1194)
     port: int
@@ -54,13 +53,11 @@ class NodeAutoInstall(BaseModel):
     protocol: str = Field(default="tcp")
     ovpn_port: int = Field(default=1194)
     node_port: int = Field(default=9090, description="Port for OV-Node service")
-    tunnel_address: Optional[str] = None
     status: bool = Field(default=True)
     set_new_setting: bool = Field(default=False)
 
 
 class SettingsUpdate(BaseModel):
-    tunnel_address: Optional[str] = None
     port: Optional[int]
     protocol: Optional[str]
 

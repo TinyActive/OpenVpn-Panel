@@ -7,23 +7,46 @@ import json
 from pathlib import Path
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 import base64
 from typing import Dict, Optional
 from backend.logger import logger
 
 
+def get_default_secure_dir() -> str:
+    """
+    Get the default secure directory path.
+    Uses INSTALL_DIR/data/secure instead of hardcoded /opt/ov-panel-secure
+    """
+    # Try to get from environment variable first
+    if "OV_PANEL_DIR" in os.environ:
+        base_dir = os.environ["OV_PANEL_DIR"]
+    else:
+        # Get the backend directory (where this file is located)
+        current_file = Path(__file__).resolve()
+        # Go up to project root: backend/node/secure_config.py -> backend/node -> backend -> root
+        project_root = current_file.parent.parent.parent
+        base_dir = str(project_root)
+    
+    secure_dir = os.path.join(base_dir, "data", "secure")
+    return secure_dir
+
+
 class SecureConfigManager:
     """Manages encrypted storage of sensitive node configuration"""
     
-    def __init__(self, config_dir: str = "/opt/ov-panel-secure"):
+    def __init__(self, config_dir: Optional[str] = None):
         """
         Initialize secure config manager
         
         Args:
-            config_dir: Directory to store encrypted config files
+            config_dir: Directory to store encrypted config files.
+                       If None, uses INSTALL_DIR/data/secure
         """
+        if config_dir is None:
+            config_dir = get_default_secure_dir()
+        
         self.config_dir = Path(config_dir)
         self.config_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
         
@@ -57,7 +80,7 @@ class SecureConfigManager:
             # Generate new master key from system entropy
             password = os.urandom(32)
             
-            kdf = PBKDF2(
+            kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt,

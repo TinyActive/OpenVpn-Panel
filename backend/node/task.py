@@ -13,22 +13,30 @@ from .ssh_installer import SSHNodeInstaller
 from .secure_config import get_secure_config_manager
 
 
-async def add_node_handler(request: NodeCreate, db: Session) -> dict:
+async def add_node_handler(request: NodeCreate, db: Session, is_fresh_install: bool = False) -> dict:
     """Add a new node with health check and sync all users to it.
+    
+    Args:
+        request: Node creation request
+        db: Database session
+        is_fresh_install: If True, use longer timeout and more retries for fresh installations
     
     Returns:
         dict with success status and sync information
     """
+    # Adjust timeout and retries based on whether this is a fresh install
+    timeout = 15 if is_fresh_install else 5
+    max_retries = 3 if is_fresh_install else 1
+    
     new_node = NodeRequests(
         request.address,
         request.port,
         request.key,
-        request.tunnel_address,
         request.protocol,
         request.ovpn_port,
         request.set_new_setting,
-        timeout=5,
-        max_retries=1,
+        timeout=timeout,
+        max_retries=max_retries,
     )
     
     # Use async health check
@@ -133,7 +141,6 @@ async def list_nodes_handler(db: Session) -> list:
         node_info = {
             "name": node.name,
             "address": node.address,
-            "tunnel-address": node.tunnel_address,
             "ovpn_port": node.ovpn_port,
             "protocol": node.protocol,
             "port": node.port,
@@ -396,14 +403,63 @@ async def auto_install_node_handler(request: NodeAutoInstall, db: Session) -> di
         if not credentials_saved:
             logger.warning(f"Failed to save encrypted credentials for {request.ssh.host}")
         
-        # Step 5: Add node to database
+        # Step 5: Wait for node API to be fully ready
+        logger.info(f"Waiting for node API to be fully ready (max 60s)...")
+        node_ready = False
+        max_wait_attempts = 12  # 12 * 5s = 60s
+        
         # Use public IP from server_info if available, otherwise use SSH host
         node_address = server_info.get("public_ip", request.ssh.host)
         
+        for attempt in range(max_wait_attempts):
+            logger.info(f"Health check attempt {attempt + 1}/{max_wait_attempts}...")
+            
+            # Quick test via HTTP from panel (async wrapper for requests)
+            try:
+                import requests
+                def check_health():
+                    response = requests.get(
+                        f"http://{node_address}:{request.node_port}/api/health",
+                        timeout=5
+                    )
+                    return response.status_code == 200
+                
+                # Run in thread pool to avoid blocking
+                is_ready = await asyncio.to_thread(check_health)
+                if is_ready:
+                    node_ready = True
+                    logger.info(f"✅ Node API is ready after {(attempt + 1) * 5}s")
+                    break
+            except Exception as e:
+                logger.debug(f"API not ready: {str(e)[:100]}")
+            
+            if attempt < max_wait_attempts - 1:
+                logger.info(f"Node not ready yet, waiting 5s...")
+                await asyncio.sleep(5)
+        
+        if not node_ready:
+            logger.warning("Node API not responding after 60s, but will try to add anyway")
+        
+        # Step 6: Add node to database
+        # Node address already extracted above
+        
+        # Get client remote IP from installation details (for verification)
+        client_remote_ip = install_details.get("client_remote_ip")
+        
+        logger.info(f"Node configuration:")
+        logger.info(f"  - Public address: {node_address} (for client connections)")
+        logger.info(f"  - Client remote IP: {client_remote_ip or 'Not detected'} (from client-common.txt)")
+        
+        # Verify that client-common.txt has the correct public IP
+        if client_remote_ip and client_remote_ip != node_address:
+            logger.warning(f"⚠️  Client remote IP ({client_remote_ip}) differs from node public IP ({node_address})")
+            logger.warning(f"    This may cause connection issues. Please check /etc/openvpn/server/client-common.txt")
+        elif client_remote_ip:
+            logger.info(f"✅ Client configuration verified: remote IP matches public IP")
+        
         node_create = NodeCreate(
             name=request.name,
-            address=node_address,
-            tunnel_address=request.tunnel_address,
+            address=node_address,  # Public IP - this is what clients connect to!
             protocol=request.protocol,
             ovpn_port=request.ovpn_port,
             port=request.node_port,
@@ -412,8 +468,8 @@ async def auto_install_node_handler(request: NodeAutoInstall, db: Session) -> di
             set_new_setting=request.set_new_setting
         )
         
-        # Add node and sync users
-        add_result = await add_node_handler(node_create, db)
+        # Add node and sync users with longer timeout for fresh installs
+        add_result = await add_node_handler(node_create, db, is_fresh_install=True)
         
         if add_result.get("success"):
             logger.info(f"Node {node_address} added to database and users synced")

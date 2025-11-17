@@ -212,3 +212,6 @@ __marimo__/
 docs/
 install_node.sh
 OpenVpn-Panel-Node/
+*.enc
+*.salt
+.master.key

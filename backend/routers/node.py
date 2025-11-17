@@ -167,7 +167,6 @@ async def list_nodes_with_live_status(
         node_info = {
             "name": node.name,
             "address": node.address,
-            "tunnel_address": node.tunnel_address,
             "ovpn_port": node.ovpn_port,
             "protocol": node.protocol,
             "port": node.port,
@@ -187,7 +186,6 @@ async def list_nodes_with_live_status(
                     address=node.address,
                     port=node.port,
                     api_key=node.key,
-                    tunnel_addres=node.tunnel_address or "ovpanel.com",
                     protocol=node.protocol,
                     ovpn_port=node.ovpn_port,
                     timeout=3,  # Quick timeout

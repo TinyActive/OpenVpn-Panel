@@ -2,9 +2,17 @@
 # Installation script for Auto-Install Node feature
 # This script is for manual installation if not using install.sh
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+INSTALL_DIR="$SCRIPT_DIR"
+VENV_DIR="$INSTALL_DIR/venv"
+SECURE_DIR="$INSTALL_DIR/data/secure"
+
 echo "=========================================="
 echo "Installing Auto-Install Node Dependencies"
 echo "=========================================="
+echo "Working directory: $INSTALL_DIR"
+echo ""
 
 # Check if running as root or with sudo
 if [ "$EUID" -ne 0 ]; then 
@@ -12,30 +20,24 @@ if [ "$EUID" -ne 0 ]; then
    exit 1
 fi
 
-# Check if OV-Panel is installed
-if [ ! -d "/opt/ov-panel" ]; then
-    echo "Error: OV-Panel is not installed at /opt/ov-panel"
+# Check if venv exists
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Error: Virtual environment not found at $VENV_DIR"
     echo "Please run the main install.sh first"
     exit 1
 fi
 
 # Create secure config directory
 echo "Creating secure config directory..."
-mkdir -p /opt/ov-panel-secure
-chmod 700 /opt/ov-panel-secure
-chown root:root /opt/ov-panel-secure
+mkdir -p "$SECURE_DIR"
+chmod 700 "$SECURE_DIR"
+chown root:root "$SECURE_DIR"
 
 # Install Python dependencies into OV-Panel venv
-echo "Installing Python dependencies into OV-Panel virtual environment..."
-cd /opt/ov-panel
+echo "Installing Python dependencies into virtual environment..."
+cd "$INSTALL_DIR"
 
-if [ ! -d "venv" ]; then
-    echo "Error: Virtual environment not found at /opt/ov-panel/venv"
-    echo "Please run the main installer first"
-    exit 1
-fi
-
-source venv/bin/activate
+source "$VENV_DIR/bin/activate"
 pip install paramiko cryptography
 
 # Verify installation
@@ -53,7 +55,7 @@ if [ $? -eq 0 ]; then
     echo "You can add new nodes via SSH from the Node Management page."
     echo ""
     echo "Security Note:"
-    echo "- SSH credentials are encrypted and stored in: /opt/ov-panel-secure/"
+    echo "- SSH credentials are encrypted and stored in: $SECURE_DIR"
     echo "- Only root can access these files (permissions: 0700)"
     echo ""
     echo "Restarting OV-Panel service..."
