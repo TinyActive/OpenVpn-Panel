@@ -116,12 +116,22 @@ def write_env_file(config: Dict[str, str], env_file_path: Path) -> None:
         f.write('\n'.join(lines))
 
 
+def get_instances_base_path() -> Path:
+    """
+    Get the base path for white-label instances.
+    Can be overridden via OV_INSTANCES_DIR environment variable.
+    """
+    import os
+    instances_dir = os.environ.get("OV_INSTANCES_DIR", "/opt/ov-panel-instances")
+    return Path(instances_dir)
+
+
 def create_instance_env_file(
     instance_id: str,
     admin_username: str,
     admin_password: str,
     port: int,
-    base_path: Path = Path("/opt/ov-panel-instances"),
+    base_path: Optional[Path] = None,
     jwt_secret: Optional[str] = None,
     api_key: Optional[str] = None,
 ) -> Path:
@@ -133,13 +143,16 @@ def create_instance_env_file(
         admin_username: Admin username
         admin_password: Admin password
         port: Port number
-        base_path: Base path for instances
+        base_path: Base path for instances (default: from environment)
         jwt_secret: Optional JWT secret
         api_key: Optional API key
     
     Returns:
         Path to the created .env file
     """
+    if base_path is None:
+        base_path = get_instances_base_path()
+    
     config = generate_instance_config(
         instance_id=instance_id,
         admin_username=admin_username,

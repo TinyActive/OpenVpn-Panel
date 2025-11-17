@@ -24,10 +24,20 @@ from .systemd_service import SystemdServiceManager
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+def get_instances_base_path() -> Path:
+    """
+    Get the base path for white-label instances.
+    Can be overridden via OV_INSTANCES_DIR environment variable.
+    Default: /opt/ov-panel-instances
+    """
+    instances_dir = os.environ.get("OV_INSTANCES_DIR", "/opt/ov-panel-instances")
+    return Path(instances_dir)
+
+
 class WhiteLabelManager:
     """Manager for white-label OV-Panel instances."""
     
-    BASE_PATH = Path("/opt/ov-panel-instances")
+    BASE_PATH = get_instances_base_path()
     SHARED_CODE_PATH = BASE_PATH / "shared"
     SOURCE_CODE_PATH = None  # Will be set dynamically
     

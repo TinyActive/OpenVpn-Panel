@@ -17,7 +17,8 @@ def get_database_url():
     
     if instance_id:
         # White-label instance - database is in instance-specific directory
-        db_path = f"/opt/ov-panel-instances/instance-{instance_id}/data/ov-panel.db"
+        instances_base = os.getenv("OV_INSTANCES_DIR", "/opt/ov-panel-instances")
+        db_path = f"{instances_base}/instance-{instance_id}/data/ov-panel.db"
     else:
         # Super admin panel or standalone installation - database is relative to code location
         db_path = f"{BASE_DIR.parent.parent}/data/ov-panel.db"

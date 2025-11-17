@@ -6,7 +6,6 @@ import LoadingButton from '../components/LoadingButton';
 const SettingsPage = () => {
   const { t } = useTranslation();
   const [settings, setSettings] = useState({
-    tunnel_address: '',
     port: 0,
     protocol: 'tcp',
   });
@@ -80,17 +79,6 @@ const SettingsPage = () => {
 
       <div className="table-container" style={{ maxWidth: '600px', margin: '0 auto' }}>
         <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
-          <div className="input-group">
-            <label htmlFor="tunnel_address">{t('tunnelAddress', 'Tunnel Address')}</label>
-            <input
-              type="text"
-              id="tunnel_address"
-              name="tunnel_address"
-              value={settings.tunnel_address || ''}
-              onChange={handleChange}
-              placeholder="e.g., 10.8.0.0"
-            />
-          </div>
           <div className="input-group">
             <label htmlFor="port">{t('ovpnPort', 'OVPN Port')}</label>
             <input

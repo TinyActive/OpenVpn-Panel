@@ -95,5 +95,17 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install colorama pexpect requests
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SECURE_DIR="$SCRIPT_DIR/data/secure"
+
+echo -e "${YELLOW}Creating secure config directory for node credentials...${NC}"
+mkdir -p "$SECURE_DIR"
+chmod 700 "$SECURE_DIR"
+chown root:root "$SECURE_DIR"
+
+echo -e "${GREEN}✓ Secure directory created: $SECURE_DIR${NC}"
+echo -e "${CYAN}  (Auto-install node dependencies will be installed during setup)${NC}"
+echo
+
 echo -e "${GREEN}Starting OV-Panel installer...${NC}"
 venv/bin/python installer.py
