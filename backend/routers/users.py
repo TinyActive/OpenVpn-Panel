@@ -9,7 +9,6 @@ from backend.db import crud
 from backend.operations.user_management import (
     create_user_on_server,
     delete_user_on_server,
-    download_ovpn_file,
 )
 from backend.auth.auth import verify_jwt_or_api_key
 from backend.node.task import (
@@ -32,21 +31,8 @@ async def get_all_users(
         data=users_list,
     )
 
-
-@router.get("/download/ovpn/{name}")
-async def download_ovpn(
-    name: str,
-    auth: dict = Depends(verify_jwt_or_api_key),
-):
-    response = download_ovpn_file(name)
-    if response:
-        return FileResponse(
-            path=response,
-            filename=f"{name}.ovpn",
-            media_type="application/x-openvpn-profile",
-        )
-    else:
-        return ResponseModel(success=False, msg="OVPN file not found", data=None)
+# NOTE: Main panel download endpoint removed - users must download from nodes
+# Main panel doesn't have OpenVPN installed by default (especially in white-label mode)
 
 
 @router.post("/create", response_model=ResponseModel)

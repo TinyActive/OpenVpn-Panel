@@ -4,11 +4,9 @@ import apiClient from '../services/api';
 import { useTranslation } from 'react-i18next';
 import LoadingButton from './LoadingButton';
 
-const MAIN_PANEL_VALUE = '__main_panel__';
-
 const SelectNodeForDownloadModal = ({ user, onClose }) => {
   const [nodes, setNodes] = useState([]);
-  const [selectedNodeAddress, setSelectedNodeAddress] = useState(MAIN_PANEL_VALUE);
+  const [selectedNodeAddress, setSelectedNodeAddress] = useState('');
   const [isLoadingNodes, setIsLoadingNodes] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState('');
@@ -36,19 +34,21 @@ const SelectNodeForDownloadModal = ({ user, onClose }) => {
     setIsDownloading(true);
 
     try {
-      let downloadUrl;
-      let downloadFileName;
-
-      if (selectedNodeAddress === MAIN_PANEL_VALUE) {
-        downloadUrl = `/user/download/ovpn/${user.name}`;
-        // CHANGED: Filename format updated
-        downloadFileName = `${user.name}-main-panel.ovpn`;
-      } else {
-        const selectedNode = nodes.find(n => n.address === selectedNodeAddress);
-        downloadUrl = `/node/download/ovpn/${selectedNodeAddress}/${user.name}`;
-        // CHANGED: Filename format updated
-        downloadFileName = `${user.name}-${selectedNode.name}.ovpn`;
+      if (!selectedNodeAddress) {
+        setError('Please select a node');
+        setIsDownloading(false);
+        return;
       }
+
+      const selectedNode = nodes.find(n => n.address === selectedNodeAddress);
+      if (!selectedNode) {
+        setError('Selected node not found');
+        setIsDownloading(false);
+        return;
+      }
+
+      const downloadUrl = `/node/download/ovpn/${selectedNodeAddress}/${user.name}`;
+      const downloadFileName = `${user.name}-${selectedNode.name}.ovpn`;
 
       const response = await apiClient.get(downloadUrl, { responseType: 'arraybuffer' });
       const contentType = response.headers['content-type'];
@@ -91,6 +91,8 @@ const SelectNodeForDownloadModal = ({ user, onClose }) => {
             <label htmlFor="node-select">{t('downloadSource', 'Download Source')}</label>
             {isLoadingNodes ? (
               <p>Loading nodes...</p>
+            ) : nodes.length === 0 ? (
+              <p style={{ color: 'var(--danger-color)' }}>{t('noNodesAvailable', 'No nodes available. Please add a node first.')}</p>
             ) : (
               <select
                 id="node-select"
@@ -99,9 +101,7 @@ const SelectNodeForDownloadModal = ({ user, onClose }) => {
                 style={{ width: '100%', padding: '10px', backgroundColor: 'var(--background-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
                 required
               >
-                <option value={MAIN_PANEL_VALUE}>
-                  {t('mainPanel', 'Main Panel (Default)')}
-                </option>
+                <option value="">{t('selectNode', 'Select a node...')}</option>
                 {nodes.map(node => (
                   <option key={node.address} value={node.address}>
                     {node.name} ({node.address})
@@ -116,7 +116,7 @@ const SelectNodeForDownloadModal = ({ user, onClose }) => {
               isLoading={isDownloading}
               type="submit"
               className="btn btn-success"
-              disabled={isLoadingNodes}
+              disabled={isLoadingNodes || nodes.length === 0 || !selectedNodeAddress}
             >
               {t('downloadButton', 'Download')}
             </LoadingButton>
