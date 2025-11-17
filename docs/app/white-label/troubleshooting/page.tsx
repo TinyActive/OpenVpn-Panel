@@ -585,7 +585,7 @@ logrotate -f /etc/logrotate.d/ov-panel-instances`}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm space-y-2">
-                        <p>• Strong passwords (>12 chars)</p>
+                        <p>• Strong passwords (&gt;12 chars)</p>
                         <p>• Firewall properly configured</p>
                         <p>• Regular security updates</p>
                         <p>• Monitor suspicious activities</p>
